@@ -1,0 +1,763 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>From data to a modeling question · DS 6021</title><meta name="description" content="DS 6021: Introduction to Predictive Modeling. An open textbook with concepts, mathematics, Python examples, and optional practice questions."><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23232d4b'/%3E%3Cpath d='M7 24V8M7 24h19M9 21l6-7 5 3 6-10' fill='none' stroke='%23ef8c45' stroke-width='2.5'/%3E%3C/svg%3E"><link rel="stylesheet" href="vendor/katex/katex.min.css"><link rel="stylesheet" href="styles.css"><script defer src="app.js"></script><script defer src="readers.js"></script><script defer src="live-python.js"></script><script defer src="demo-data.js"></script><script defer src="demos.js"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="mobile-header"><a href="index.html">DS 6021</a><button id="menu" aria-controls="sidebar" aria-expanded="false">Course menu</button></header><aside id="sidebar"><a class="brand" href="index.html"><span class="brand-mark">DS</span><span>6021<span class="brand-sub">PREDICTIVE MODELING</span></span></a><p class="term">UNIVERSITY OF VIRGINIA</p><nav aria-label="Course"><a class="navlink " href="index.html">Course overview</a><div class="nav-label">THE COURSE</div><a class="navlink active" href="module-1.html">01  Data &amp; questions</a><a class="navlink " href="module-2.html">02  Inference &amp; experiments</a><a class="navlink " href="module-3.html">03  Regression &amp; optimization</a><a class="navlink " href="module-4.html">04  Multiple regression</a><a class="navlink " href="module-5.html">05  Interactions &amp; transforms</a><a class="navlink " href="module-6.html">06  Generalization</a><div class="nav-label">RESOURCES</div><a class="navlink " href="labs.html">Labs &amp; project</a><a class="navlink " href="resources.html">Book guide &amp; references</a><a class="navlink " href="datasets/">Datasets</a></nav><div class="sidebar-foot">Prince Afriyie<br><span>School of Data Science</span></div></aside><main id="main"><div class="topline"><span>UNIVERSITY OF VIRGINIA <b>/</b> MS IN DATA SCIENCE</span><span>AN OPEN COURSE BOOK</span></div><div class="eyebrow">CHAPTER 01</div><h1 class="page-title">From data to a modeling question</h1><p class="lede">Identify the observational unit, inspect the data, and decide what you want to learn.</p><div class="anchor-nav"><a href="#materials">Chapter & class code</a><a href="#run-python">Run Python</a><a href="#illustration">Illustration</a><a href="#code">Extra practice</a><a href="#readings">Readings</a><a href="#practice">Optional questions</a></div><div class="code-controls"><button class="button" data-code-visibility aria-pressed="false">Show all code</button><span>Read the outputs first; reveal code when useful.</span></div><div class="note"><strong>Public teaching edition.</strong> Survey examples use entirely fictional data; no original student responses are included.</div><section id="materials"><h2 class="toc-title">In this chapter</h2><ol class="lesson-index"><li><a href="#lesson-1">Start with an observational unit</a></li><li><a href="#lesson-2">Build a dataset from an API</a></li><li><a href="#lesson-3">Visualize, compare, and map</a></li><li><a href="#lesson-4">Choose the kind of learning problem</a></li></ol><p class="caption">Lecture concepts and original notebook cells, together in one continuous chapter. Saved outputs are visible; original code is available on demand. The browser exercise below is editable and runnable here.</p></section><article class="textbook"><section class="lesson-section" id="lesson-1"><h2><span class="chapter-number">1.1</span> Start with an observational unit</h2><p>A dataset becomes useful when we can say what one row represents. An <strong>observational unit</strong> is the entity being measured: a student, a customer, a store, or a city at a particular hour. A variable records one characteristic of that unit. Describe the population of interest and how the observed rows were collected before modeling.</p>
+<p>In the class survey, a row represents a response. A numeric-looking column is not necessarily quantitative: a category code still describes membership, not an amount. Check types, missing values, impossible values, inconsistent spellings, and duplicated responses. Keep a record of cleaning choices so another person can reproduce them.</p>
+<h3>From a question to a modeling table</h3>
+<ol>
+<li>State the question and identify the observational unit.</li>
+<li>Describe each column, including its units.</li>
+<li>Inspect and clean the data without automatically discarding unusual observations.</li>
+<li>Explore distributions and relationships.</li>
+<li>Choose the response and identify information available when a prediction must be made.</li>
+</ol>
+<p>The following cells illustrate inspection and visualization. Substantive cleaning decisions still require knowledge of how the survey was collected.</p>
+<h3>From a row to a population claim</h3>
+<p>Distinguish the <strong>observed sample</strong>, the <strong>population you want to describe</strong>, and the <strong>future cases on which a model will be used</strong>. They need not be the same. A class survey can describe participating students; it cannot automatically represent all UVA students. Likewise, a weather model trained in one season may face a different distribution in another.</p>
+<p>For numerical observations <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mn>1</mn></msub><mo separator="true">,</mo><mo>…</mo><mo separator="true">,</mo><msub><mi>x</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">x_1,\ldots,x_n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner">…</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, the sample mean and standard deviation summarize center and spread:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>x</mi><mo stretchy="true">‾</mo></mover><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>x</mi><mi>i</mi></msub><mo separator="true">,</mo><mspace width="2em"/><mi>s</mi><mo>=</mo><msqrt><mrow><mfrac><mn>1</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></mfrac><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>x</mi><mo stretchy="true">‾</mo></mover><msup><mo stretchy="false">)</mo><mn>2</mn></msup></mrow></msqrt><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\overline x=\frac1n\sum_i x_i,\qquad s=\sqrt{\frac1{n-1}\sum_i(x_i-\overline x)^2}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6306em;"></span><span class="mord katex-overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.5991em;vertical-align:-1.2777em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">n</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2777em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">s</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:3.04em;vertical-align:-1.3842em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6558em;"><span class="svg-align" style="top:-5em;"><span class="pstrut" style="height:5em;"></span><span class="mord" style="padding-left:1em;"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7693em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2777em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord katex-overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.6158em;"><span class="pstrut" style="height:5em;"></span><span class="hide-tail" style="min-width:1.02em;height:3.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="3.08em" viewBox="0 0 400000 3240" preserveAspectRatio="xMinYMin slice"><path d="M473,2793
+c339.3,-1799.3,509.3,-2700,510,-2702 l0 -0
+c3.3,-7.3,9.3,-11,18,-11 H400000v40H1017.7
+s-90.5,478,-276.2,1466c-185.7,988,-279.5,1483,-281.5,1485c-2,6,-10,9,-24,9
+c-8,0,-12,-0.7,-12,-2c0,-1.3,-5.3,-32,-16,-92c-50.7,-293.3,-119.7,-693.3,-207,-1200
+c0,-1.3,-5.3,8.7,-16,30c-10.7,21.3,-21.3,42.7,-32,64s-16,33,-16,33s-26,-26,-26,-26
+s76,-153,76,-153s77,-151,77,-151c0.7,0.7,35.7,202,105,604c67.3,400.7,102,602.7,104,
+606zM1001 80h400000v40H1017.7z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.3842em;"><span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>The standard deviation describes variation <strong>among observations</strong>. A standard error describes variation <strong>in an estimator across samples</strong>. They answer different questions. For independent, identically distributed observations with finite variance, the estimated standard error of the mean is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mi mathvariant="normal">/</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">s/\sqrt n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0503em;vertical-align:-0.25em;"></span><span class="mord mathnormal">s</span><span class="mord">/</span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8003em;"><span class="svg-align" style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="padding-left:0.833em;">n</span></span><span style="top:-2.7603em;"><span class="pstrut" style="height:3em;"></span><span class="hide-tail" style="min-width:0.853em;height:1.08em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.08em" viewBox="0 0 400000 1080" preserveAspectRatio="xMinYMin slice"><path d="M95,702
+c-2.7,0,-7.17,-2.7,-13.5,-8c-5.8,-5.3,-9.5,-10,-9.5,-14
+c0,-2,0.3,-3.3,1,-4c1.3,-2.7,23.83,-20.7,67.5,-54
+c44.2,-33.3,65.8,-50.3,66.5,-51c1.3,-1.3,3,-2,5,-2c4.7,0,8.7,3.3,12,10
+s173,378,173,378c0.7,0,35.3,-71,104,-213c68.7,-142,137.5,-285,206.5,-429
+c69,-144,104.5,-217.7,106.5,-221
+l0 -0
+c5.3,-9.3,12,-14,20,-14
+H400000v40H845.2724
+s-225.272,467,-225.272,467s-235,486,-235,486c-2.7,4.7,-9,7,-19,7
+c-6,0,-10,-1,-12,-3s-194,-422,-194,-422s-65,47,-65,47z
+M834 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2397em;"><span></span></span></span></span></span></span></span></span>.</p>
+<p><strong>Interpretation example:</strong> If typical sleep varies substantially among respondents, that is a statement about student-to-student variation. A precise estimate of the sample's population mean does not imply that every student sleeps close to that mean.</p><aside class="teaching-note">This public edition uses a fictional survey. Original student responses and their outputs are not published.</aside><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>ClassData Codes</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/class-data.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="class-data" data-cell="1"><details class="code-reveal"><summary>Show Python · Cell 2</summary><div class="cell-header"><span>Cell 2</span><button class="copy" data-copy="codegroup-1-1">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-1">import pandas as pd
+import numpy as np</code></pre></details></div><div class="notebook-cell" data-book="class-data" data-cell="2"><details class="code-reveal"><summary>Show Python · Cell 3</summary><div class="cell-header"><span>Cell 3</span><button class="copy" data-copy="codegroup-1-2">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-2">our_data=pd.read_csv(&quot;Synthetic_Class_Survey.csv&quot;)</code></pre></details></div><div class="notebook-cell" data-book="class-data" data-cell="3"><details class="code-reveal"><summary>Show Python · Cell 4</summary><div class="cell-header"><span>Cell 4</span><button class="copy" data-copy="codegroup-1-3">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-3">our_data.head()</code></pre></details></div><div class="notebook-cell" data-book="class-data" data-cell="4"><details class="code-reveal"><summary>Show Python · Cell 5</summary><div class="cell-header"><span>Cell 5</span><button class="copy" data-copy="codegroup-1-4">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-4">our_data</code></pre></details></div><div class="notebook-cell" data-book="class-data" data-cell="5"><details class="code-reveal"><summary>Show Python · Cell 6</summary><div class="cell-header"><span>Cell 6</span><button class="copy" data-copy="codegroup-1-5">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-5">our_data.info()</code></pre></details></div><div class="notebook-cell" data-book="class-data" data-cell="6"><details class="code-reveal"><summary>Show Python · Cell 7</summary><div class="cell-header"><span>Cell 7</span><button class="copy" data-copy="codegroup-1-6">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-6">our_data.describe()</code></pre></details></div><div class="notebook-cell" data-book="class-data" data-cell="7"><details class="code-reveal"><summary>Show Python · Cell 8</summary><div class="cell-header"><span>Cell 8</span><button class="copy" data-copy="codegroup-1-7">Copy cell</button></div><pre class="source-code"><code id="codegroup-1-7">our_data[&quot;What is your favorite sport to watch on tv?&quot;].value_counts(normalize=True)</code></pre></details></div><p class="notebook-download"><a href="notebooks/class-data.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section><section class="lesson-section" id="lesson-2"><h2><span class="chapter-number">1.2</span> Build a dataset from an API</h2><p>An API returns structured data in response to a request. The notebook requests hourly weather information, receives JSON, and turns the arrays into a pandas table. The practical sequence is <strong>request → inspect → organize → check → analyze</strong>.</p>
+<p>Here, each row is a location–time observation. Temperature, humidity, and precipitation are measurements; the timestamp supplies their temporal context. Check that timestamps and measurements align and that missing values remain identifiable.</p>
+<p>Ask which units the service used, which time zone the timestamp describes, and whether values are observations or forecasts. A misleading time label can make a plot wrong even when every line of Python runs successfully.</p>
+<h3>Preserve the meaning of a measurement</h3>
+<p>A unit conversion changes numbers without changing the underlying phenomenon. For temperature,</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>F</mi><mo>=</mo><mfrac><mn>9</mn><mn>5</mn></mfrac><mi>C</mi><mo>+</mo><mn>32.</mn></mrow><annotation encoding="application/x-tex">F=\frac95 C+32.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.1389em;">F</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.0074em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">5</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">9</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord mathnormal" style="margin-right:0.0715em;">C</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">32.</span></span></span></span></span></p>
+<p>A difference of 1°C is a difference of 1.8°F; the added 32 changes the origin, not the size of a difference. If the response is Fahrenheit rather than Celsius, both the intercept and slope of a regression involving temperature can change. Good column names and labels prevent an apparently correct calculation from having the wrong interpretation.</p>
+<p>Record the request parameters, retrieval date, units, and transformations with an API dataset. Reproducibility requires knowing which information was available at the time—not only retaining the final table.</p><aside class="teaching-note">Weather notebook outputs below are saved snapshots, not current conditions. Rerunning the API cells retrieves a new date window.</aside><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>Exploring Data</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/weather.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="weather" data-cell="0"><details class="code-reveal"><summary>Show Python · Cell 1</summary><div class="cell-header"><span>Cell 1</span><button class="copy" data-copy="codegroup-2-0">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-0">import pandas as pd
+import numpy as np
+import requests</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="1"><details class="code-reveal"><summary>Show Python · Cell 2</summary><div class="cell-header"><span>Cell 2</span><button class="copy" data-copy="codegroup-2-1">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-1">url = &quot;https://api.open-meteo.com/v1/forecast&quot;
+
+params = {
+    &quot;latitude&quot;: 38.03,
+    &quot;longitude&quot;: -78.48,
+    &quot;hourly&quot;: [
+        &quot;temperature_2m&quot;,
+        &quot;relative_humidity_2m&quot;,
+        &quot;precipitation&quot;,
+        &quot;wind_speed_10m&quot;,
+        &quot;weather_code&quot;
+    ],
+    &quot;temperature_unit&quot;: &quot;fahrenheit&quot;,
+    &quot;timezone&quot;: &quot;America/New_York&quot;,
+    &quot;past_days&quot;: 7,
+    &quot;forecast_days&quot;: 3
+}
+
+response = requests.get(url, params=params)
+
+data = response.json()</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="2"><details class="code-reveal"><summary>Show Python · Cell 3</summary><div class="cell-header"><span>Cell 3</span><button class="copy" data-copy="codegroup-2-2">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-2">weather = pd.DataFrame(data[&quot;hourly&quot;])
+
+weather.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>time</th>
+      <th>temperature_2m</th>
+      <th>relative_humidity_2m</th>
+      <th>precipitation</th>
+      <th>wind_speed_10m</th>
+      <th>weather_code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2026-08-21T00:00</td>
+      <td>71.3</td>
+      <td>79</td>
+      <td>0.0</td>
+      <td>3.2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2026-08-21T01:00</td>
+      <td>69.7</td>
+      <td>85</td>
+      <td>0.0</td>
+      <td>4.3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2026-08-21T02:00</td>
+      <td>68.8</td>
+      <td>83</td>
+      <td>0.0</td>
+      <td>3.2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2026-08-21T03:00</td>
+      <td>67.3</td>
+      <td>85</td>
+      <td>0.0</td>
+      <td>3.3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2026-08-21T04:00</td>
+      <td>66.3</td>
+      <td>87</td>
+      <td>0.0</td>
+      <td>2.9</td>
+      <td>3</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="weather" data-cell="3"><details class="code-reveal"><summary>Show Python · Cell 4</summary><div class="cell-header"><span>Cell 4</span><button class="copy" data-copy="codegroup-2-3">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-3">weather.dtypes</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>time</th>
+      <td>object</td>
+    </tr>
+    <tr>
+      <th>temperature_2m</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>relative_humidity_2m</th>
+      <td>int64</td>
+    </tr>
+    <tr>
+      <th>precipitation</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>wind_speed_10m</th>
+      <td>float64</td>
+    </tr>
+    <tr>
+      <th>weather_code</th>
+      <td>int64</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="weather" data-cell="4"><details class="code-reveal"><summary>Show Python · Cell 5</summary><div class="cell-header"><span>Cell 5</span><button class="copy" data-copy="codegroup-2-4">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-4">weather = weather.rename(columns={
+    &quot;time&quot;: &quot;datetime&quot;,
+    &quot;temperature_2m&quot;: &quot;temperature_f&quot;,
+    &quot;relative_humidity_2m&quot;: &quot;humidity_pct&quot;,
+    &quot;precipitation&quot;: &quot;precipitation_mm&quot;,
+    &quot;wind_speed_10m&quot;: &quot;wind_speed_kmh&quot;,
+    &quot;weather_code&quot;: &quot;weather_code&quot;
+})</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="5"><details class="code-reveal"><summary>Show Python · Cell 6</summary><div class="cell-header"><span>Cell 6</span><button class="copy" data-copy="codegroup-2-5">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-5">weather</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>datetime</th>
+      <th>temperature_f</th>
+      <th>humidity_pct</th>
+      <th>precipitation_mm</th>
+      <th>wind_speed_kmh</th>
+      <th>weather_code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2026-08-21T00:00</td>
+      <td>71.3</td>
+      <td>79</td>
+      <td>0.0</td>
+      <td>3.2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2026-08-21T01:00</td>
+      <td>69.7</td>
+      <td>85</td>
+      <td>0.0</td>
+      <td>4.3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2026-08-21T02:00</td>
+      <td>68.8</td>
+      <td>83</td>
+      <td>0.0</td>
+      <td>3.2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2026-08-21T03:00</td>
+      <td>67.3</td>
+      <td>85</td>
+      <td>0.0</td>
+      <td>3.3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2026-08-21T04:00</td>
+      <td>66.3</td>
+      <td>87</td>
+      <td>0.0</td>
+      <td>2.9</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>235</th>
+      <td>2026-08-30T19:00</td>
+      <td>86.1</td>
+      <td>49</td>
+      <td>0.0</td>
+      <td>16.6</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>236</th>
+      <td>2026-08-30T20:00</td>
+      <td>81.6</td>
+      <td>60</td>
+      <td>0.0</td>
+      <td>13.2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>237</th>
+      <td>2026-08-30T21:00</td>
+      <td>80.5</td>
+      <td>63</td>
+      <td>0.0</td>
+      <td>8.6</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>238</th>
+      <td>2026-08-30T22:00</td>
+      <td>78.7</td>
+      <td>67</td>
+      <td>0.0</td>
+      <td>8.4</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>239</th>
+      <td>2026-08-30T23:00</td>
+      <td>76.8</td>
+      <td>71</td>
+      <td>0.0</td>
+      <td>8.2</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="weather" data-cell="6"><details class="code-reveal"><summary>Show Python · Cell 7</summary><div class="cell-header"><span>Cell 7</span><button class="copy" data-copy="codegroup-2-6">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-6">weather.describe()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>temperature_f</th>
+      <th>humidity_pct</th>
+      <th>precipitation_mm</th>
+      <th>wind_speed_kmh</th>
+      <th>weather_code</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>240.000000</td>
+      <td>240.000000</td>
+      <td>240.000000</td>
+      <td>240.000000</td>
+      <td>240.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>73.955000</td>
+      <td>70.112500</td>
+      <td>0.451667</td>
+      <td>6.063333</td>
+      <td>2.208333</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>8.394692</td>
+      <td>16.953044</td>
+      <td>4.723634</td>
+      <td>3.180904</td>
+      <td>8.719618</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>53.900000</td>
+      <td>31.000000</td>
+      <td>0.000000</td>
+      <td>0.400000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>68.400000</td>
+      <td>58.000000</td>
+      <td>0.000000</td>
+      <td>3.800000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>72.600000</td>
+      <td>69.500000</td>
+      <td>0.000000</td>
+      <td>5.650000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>80.925000</td>
+      <td>86.000000</td>
+      <td>0.000000</td>
+      <td>7.900000</td>
+      <td>3.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>94.800000</td>
+      <td>99.000000</td>
+      <td>61.900000</td>
+      <td>16.600000</td>
+      <td>82.000000</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="weather" data-cell="7"><details class="code-reveal"><summary>Show Python · Cell 8</summary><div class="cell-header"><span>Cell 8</span><button class="copy" data-copy="codegroup-2-7">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-7">weather[&quot;rain&quot;] = np.where(
+    weather[&quot;precipitation_mm&quot;] &gt; 0,
+    &quot;Yes&quot;,
+    &quot;No&quot;
+)</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="8"><details class="code-reveal"><summary>Show Python · Cell 9</summary><div class="cell-header"><span>Cell 9</span><button class="copy" data-copy="codegroup-2-8">Copy cell</button></div><pre class="source-code"><code id="codegroup-2-8">weather[&quot;rain&quot;].value_counts(
+    normalize=True
+)</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>proportion</th>
+    </tr>
+    <tr>
+      <th>rain</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>No</th>
+      <td>0.983333</td>
+    </tr>
+    <tr>
+      <th>Yes</th>
+      <td>0.016667</td>
+    </tr>
+  </tbody>
+</table></div></div></div><p class="notebook-download"><a href="notebooks/weather.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section><section class="lesson-section" id="lesson-3"><h2><span class="chapter-number">1.3</span> Visualize, compare, and map</h2><p>Use plots to answer specific questions. A time plot shows change through a sequence. A scatterplot shows how two measurements vary together. A map adds spatial context, but does not replace a clear time reference.</p>
+<p>When combining cities, retain the city identifier on every row. Otherwise, repeated timestamps may be indistinguishable. A grouped summary should specify both the grouping variable and the statistic.</p>
+<p>These cells compare six towns and create a map. Association between humidity and temperature does not establish causation. Observations close in space or time may also be dependent; random-row validation is not automatically appropriate for forecasting future weather.</p>
+<h3>Why correlation is only one view</h3>
+<p>For paired numerical variables, sample correlation is</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>r</mi><mo>=</mo><mfrac><mrow><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>x</mi><mo stretchy="true">‾</mo></mover><mo stretchy="false">)</mo><mo stretchy="false">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>y</mi><mo stretchy="true">‾</mo></mover><mo stretchy="false">)</mo></mrow><msqrt><mrow><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false">(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>x</mi><mo stretchy="true">‾</mo></mover><msup><mo stretchy="false">)</mo><mn>2</mn></msup><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>y</mi><mo stretchy="true">‾</mo></mover><msup><mo stretchy="false">)</mo><mn>2</mn></msup></mrow></msqrt></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">r=\frac{\sum_i(x_i-\overline x)(y_i-\overline y)}{\sqrt{\sum_i(x_i-\overline x)^2\sum_i(y_i-\overline y)^2}}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.0278em;">r</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.5697em;vertical-align:-1.13em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.4397em;"><span style="top:-2.1999em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9101em;"><span class="svg-align" style="top:-3.2em;"><span class="pstrut" style="height:3.2em;"></span><span class="mord" style="padding-left:1em;"><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord katex-overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord katex-overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-2.8701em;"><span class="pstrut" style="height:3.2em;"></span><span class="hide-tail" style="min-width:1.02em;height:1.28em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="1.28em" viewBox="0 0 400000 1296" preserveAspectRatio="xMinYMin slice"><path d="M263,681c0.7,0,18,39.7,52,119
+c34,79.3,68.167,158.7,102.5,238c34.3,79.3,51.8,119.3,52.5,120
+c340,-704.7,510.7,-1060.3,512,-1067
+l0 -0
+c4.7,-7.3,11,-11,19,-11
+H40000v40H1012.3
+s-271.3,567,-271.3,567c-38.7,80.7,-84,175,-136,283c-52,108,-89.167,185.3,-111.5,232
+c-22.3,46.7,-33.8,70.3,-34.5,71c-4.7,4.7,-12.3,7,-23,7s-12,-1,-12,-1
+s-109,-253,-109,-253c-72.7,-168,-109.3,-252,-110,-252c-10.7,8,-22,16.7,-34,26
+c-22,17.3,-33.3,26,-34,26s-26,-26,-26,-26s76,-59,76,-59s76,-60,76,-60z
+M1001 80h400000v40h-400000z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3299em;"><span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.6897em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mop op-symbol small-op" style="position:relative;top:0em;">∑</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.162em;"><span style="top:-2.4003em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2997em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord katex-overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">x</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="mclose">)</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord katex-overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.13em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>This standardizes a linear association, making it unitless and bounded between −1 and 1 when both variables vary. Near-zero correlation does not rule out a strong curved relationship. A single unusual point can also strongly influence the result.</p>
+<p>For the planets data, distance and revolution period are strongly associated, but their scatterplot contains information that a single correlation conceals: the relationship bends. Always connect a numerical summary to a plot and to the scientific question.</p><aside class="teaching-note">The final map takes the last timestamp for each city, including forecast hours. It should not be interpreted as a live observation map.</aside><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>Exploring Data</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/weather.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="weather" data-cell="9"><details class="code-reveal"><summary>Show Python · Cell 10</summary><div class="cell-header"><span>Cell 10</span><button class="copy" data-copy="codegroup-3-9">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-9">import plotly.express as px</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="10"><details class="code-reveal"><summary>Show Python · Cell 11</summary><div class="cell-header"><span>Cell 11</span><button class="copy" data-copy="codegroup-3-10">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-10">fig = px.line(
+    weather,
+    x=&quot;datetime&quot;,
+    y=&quot;temperature_f&quot;,
+    title=&quot;Temperature Over Time&quot;,
+    labels={
+        &quot;datetime&quot;: &quot;Date and Time&quot;,
+        &quot;temperature_f&quot;: &quot;Temperature (°F)&quot;
+    },
+    hover_data=[
+        &quot;humidity_pct&quot;,
+        &quot;precipitation_mm&quot;,
+        &quot;wind_speed_kmh&quot;,
+        &quot;weather_code&quot;
+    ]
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/weather-10-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="weather" data-cell="11"><details class="code-reveal"><summary>Show Python · Cell 12</summary><div class="cell-header"><span>Cell 12</span><button class="copy" data-copy="codegroup-3-11">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-11">fig = px.scatter(
+    weather,
+    x=&quot;humidity_pct&quot;,
+    y=&quot;temperature_f&quot;,
+    color=&quot;rain&quot;,
+    hover_data=[
+        &quot;datetime&quot;,
+        &quot;precipitation_mm&quot;,
+        &quot;wind_speed_kmh&quot;
+    ],
+    title=&quot;Temperature vs. Humidity: Rain vs. No Rain&quot;,
+    labels={
+        &quot;humidity_pct&quot;: &quot;Relative Humidity (%)&quot;,
+        &quot;temperature_f&quot;: &quot;Temperature (°F)&quot;
+    }
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/weather-11-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="weather" data-cell="12"><details class="code-reveal"><summary>Show Python · Cell 13</summary><div class="cell-header"><span>Cell 13</span><button class="copy" data-copy="codegroup-3-12">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-12">locations = pd.DataFrame({
+    &quot;city&quot;: [
+        &quot;Charlottesville&quot;,
+        &quot;Crozet&quot;,
+        &quot;Earlysville&quot;,
+        &quot;Scottsville&quot;,
+        &quot;Palmyra&quot;,
+        &quot;Waynesboro&quot;
+    ],
+    &quot;latitude&quot;: [
+        38.0293,
+        38.0667,
+        38.1575,
+        37.7996,
+        37.8610,
+        38.0687
+    ],
+    &quot;longitude&quot;: [
+        -78.4767,
+        -78.6996,
+        -78.4828,
+        -78.4956,
+        -78.2637,
+        -78.8894
+    ]
+})
+</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="13"><details class="code-reveal"><summary>Show Python · Cell 14</summary><div class="cell-header"><span>Cell 14</span><button class="copy" data-copy="codegroup-3-13">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-13">weather_list = []
+
+for _, row in locations.iterrows():
+
+    params = {
+        &quot;latitude&quot;: row[&quot;latitude&quot;],
+        &quot;longitude&quot;: row[&quot;longitude&quot;],
+        &quot;hourly&quot;: [
+            &quot;temperature_2m&quot;,
+            &quot;relative_humidity_2m&quot;,
+            &quot;precipitation&quot;,
+            &quot;wind_speed_10m&quot;,
+            &quot;weather_code&quot;
+        ],
+        &quot;temperature_unit&quot;: &quot;fahrenheit&quot;,
+        &quot;timezone&quot;: &quot;America/New_York&quot;,
+        &quot;past_days&quot;: 7,
+        &quot;forecast_days&quot;: 3
+    }
+
+    response = requests.get(
+        &quot;https://api.open-meteo.com/v1/forecast&quot;,
+        params=params
+    )
+
+    data = response.json()
+
+    temp = pd.DataFrame(data[&quot;hourly&quot;])
+
+    temp[&quot;city&quot;] = row[&quot;city&quot;]
+    temp[&quot;latitude&quot;] = row[&quot;latitude&quot;]
+    temp[&quot;longitude&quot;] = row[&quot;longitude&quot;]
+
+    weather_list.append(temp)
+
+
+weather = pd.concat(
+    weather_list,
+    ignore_index=True
+)</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="14"><details class="code-reveal"><summary>Show Python · Cell 15</summary><div class="cell-header"><span>Cell 15</span><button class="copy" data-copy="codegroup-3-14">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-14">weather = weather.rename(columns={
+    &quot;time&quot;: &quot;datetime&quot;,
+    &quot;temperature_2m&quot;: &quot;temperature_f&quot;,
+    &quot;relative_humidity_2m&quot;: &quot;humidity_pct&quot;,
+    &quot;precipitation&quot;: &quot;precipitation_mm&quot;,
+    &quot;wind_speed_10m&quot;: &quot;wind_speed_kmh&quot;,
+    &quot;weather_code&quot;: &quot;weather_code&quot;
+})</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="15"><details class="code-reveal"><summary>Show Python · Cell 16</summary><div class="cell-header"><span>Cell 16</span><button class="copy" data-copy="codegroup-3-15">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-15">weather[&quot;datetime&quot;] = pd.to_datetime(
+    weather[&quot;datetime&quot;]
+)</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="16"><details class="code-reveal"><summary>Show Python · Cell 17</summary><div class="cell-header"><span>Cell 17</span><button class="copy" data-copy="codegroup-3-16">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-16">weather.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>datetime</th>
+      <th>temperature_f</th>
+      <th>humidity_pct</th>
+      <th>precipitation_mm</th>
+      <th>wind_speed_kmh</th>
+      <th>weather_code</th>
+      <th>city</th>
+      <th>latitude</th>
+      <th>longitude</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2026-08-21 00:00:00</td>
+      <td>71.2</td>
+      <td>79</td>
+      <td>0.0</td>
+      <td>3.2</td>
+      <td>0</td>
+      <td>Charlottesville</td>
+      <td>38.0293</td>
+      <td>-78.4767</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2026-08-21 01:00:00</td>
+      <td>69.7</td>
+      <td>85</td>
+      <td>0.0</td>
+      <td>4.3</td>
+      <td>0</td>
+      <td>Charlottesville</td>
+      <td>38.0293</td>
+      <td>-78.4767</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2026-08-21 02:00:00</td>
+      <td>68.8</td>
+      <td>83</td>
+      <td>0.0</td>
+      <td>3.2</td>
+      <td>0</td>
+      <td>Charlottesville</td>
+      <td>38.0293</td>
+      <td>-78.4767</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2026-08-21 03:00:00</td>
+      <td>67.2</td>
+      <td>85</td>
+      <td>0.0</td>
+      <td>3.3</td>
+      <td>0</td>
+      <td>Charlottesville</td>
+      <td>38.0293</td>
+      <td>-78.4767</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2026-08-21 04:00:00</td>
+      <td>66.2</td>
+      <td>87</td>
+      <td>0.0</td>
+      <td>2.9</td>
+      <td>3</td>
+      <td>Charlottesville</td>
+      <td>38.0293</td>
+      <td>-78.4767</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="weather" data-cell="17"><details class="code-reveal"><summary>Show Python · Cell 18</summary><div class="cell-header"><span>Cell 18</span><button class="copy" data-copy="codegroup-3-17">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-17">latest_weather = (
+    weather
+    .sort_values(&quot;datetime&quot;)
+    .groupby(&quot;city&quot;)
+    .tail(1)
+)</code></pre></details></div><div class="notebook-cell" data-book="weather" data-cell="18"><details class="code-reveal"><summary>Show Python · Cell 19</summary><div class="cell-header"><span>Cell 19</span><button class="copy" data-copy="codegroup-3-18">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-18">latest_weather[
+    [&quot;city&quot;, &quot;temperature_f&quot;, &quot;humidity_pct&quot;]
+]</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>city</th>
+      <th>temperature_f</th>
+      <th>humidity_pct</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>719</th>
+      <td>Earlysville</td>
+      <td>74.7</td>
+      <td>74</td>
+    </tr>
+    <tr>
+      <th>959</th>
+      <td>Scottsville</td>
+      <td>78.4</td>
+      <td>68</td>
+    </tr>
+    <tr>
+      <th>479</th>
+      <td>Crozet</td>
+      <td>74.3</td>
+      <td>75</td>
+    </tr>
+    <tr>
+      <th>239</th>
+      <td>Charlottesville</td>
+      <td>76.7</td>
+      <td>71</td>
+    </tr>
+    <tr>
+      <th>1199</th>
+      <td>Palmyra</td>
+      <td>79.2</td>
+      <td>66</td>
+    </tr>
+    <tr>
+      <th>1439</th>
+      <td>Waynesboro</td>
+      <td>72.4</td>
+      <td>76</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="weather" data-cell="19"><details class="code-reveal"><summary>Show Python · Cell 20</summary><div class="cell-header"><span>Cell 20</span><button class="copy" data-copy="codegroup-3-19">Copy cell</button></div><pre class="source-code"><code id="codegroup-3-19">fig = px.scatter_map(
+    latest_weather,
+    lat=&quot;latitude&quot;,
+    lon=&quot;longitude&quot;,
+    color=&quot;temperature_f&quot;,
+    size=&quot;temperature_f&quot;,
+    hover_name=&quot;city&quot;,
+    hover_data={
+        &quot;temperature_f&quot;: True,
+        &quot;humidity_pct&quot;: True,
+        &quot;precipitation_mm&quot;: True,
+        &quot;wind_speed_kmh&quot;: True,
+        &quot;latitude&quot;: False,
+        &quot;longitude&quot;: False
+    },
+    zoom=8,
+    title=&quot;Temperature Across Central Virginia&quot;,
+    labels={
+        &quot;temperature_f&quot;: &quot;Temperature (°F)&quot;
+    }
+)
+
+fig.update_layout(
+    map_style=&quot;open-street-map&quot;
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/weather-19-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><p class="notebook-download"><a href="notebooks/weather.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section><section class="lesson-section" id="lesson-4"><h2><span class="chapter-number">1.4</span> Choose the kind of learning problem</h2><h3>Supervised learning</h3>
+<p>Supervised learning uses examples with a known response <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Y</mi></mrow><annotation encoding="application/x-tex">Y</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span></span></span></span> and predictors <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi></mrow><annotation encoding="application/x-tex">X</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span></span></span></span>. The fitted rule converts predictors into a prediction:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>X</mi><mo>⟼</mo><mover accent="true"><mi>f</mi><mo stretchy="true">^</mo></mover><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo><mo>=</mo><mover accent="true"><mi>Y</mi><mo stretchy="true">^</mo></mover><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">X\longmapsto\widehat f(X)=\widehat Y.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6943em;vertical-align:-0.011em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">⟼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1844em;vertical-align:-0.25em;"></span><span class="mord katex-accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9344em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.1076em;">f</span></span><span class="svg-align" style="width:calc(100% - 0.3333em);margin-left:0.3333em;top:-3.6944em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.9233em;"></span><span class="mord katex-accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9233em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>For <strong>regression</strong>, the response is quantitative, such as revenue. For <strong>classification</strong>, it is a category, such as whether a customer purchases. A classifier can estimate probabilities before a decision threshold produces labels.</p>
+<h3>Unsupervised and reinforcement learning</h3>
+<p>Unsupervised learning has no designated response label. Clustering groups similar observations; dimension reduction summarizes many variables using fewer coordinates. The definition of similarity and the variable scales matter.</p>
+<p>Reinforcement learning studies actions in an environment with rewards and subsequent states. Its sequential feedback differs from predicting a label in a fixed table.</p>
+<h3>What makes a model useful?</h3>
+<p>A model must address the question, make useful predictions on new observations, and support appropriate interpretation. Training accuracy alone does not establish generalization. A coefficient is useful only when its interpretation matches the coding and assumptions. Keep three questions together: <strong>What did we fit? How did we evaluate it? What can we conclude?</strong></p>
+<h3>Why squared-error prediction targets a mean</h3>
+<p>Suppose we predict a constant <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi></mrow><annotation encoding="application/x-tex">c</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">c</span></span></span></span> for cases with predictors <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi><mo>=</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">X=x</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span></span></span></span>. Add and subtract the conditional mean <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">\mu(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">μ</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span>, then expand:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><mo stretchy="false">(</mo><mi>Y</mi><mo>−</mo><mi>c</mi><msup><mo stretchy="false">)</mo><mn>2</mn></msup><mo>∣</mo><mi>X</mi><mo>=</mo><mi>x</mi><mo stretchy="false">]</mo><mo>=</mo><mi mathvariant="normal">Var</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>Y</mi><mo>∣</mo><mi>X</mi><mo>=</mo><mi>x</mi><mo stretchy="false">)</mo><mo>+</mo><mo stretchy="false">[</mo><mi>μ</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>−</mo><mi>c</mi><msup><mo stretchy="false">]</mo><mn>2</mn></msup><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\mathbb E[(Y-c)^2\mid X=x]=\operatorname{Var}(Y\mid X=x)+[\mu(x)-c]^2.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">E</span><span class="mopen">[(</span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord mathnormal">c</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm">Var</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord mathnormal">μ</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord mathnormal">c</span><span class="mclose"><span class="mclose">]</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>The first term does not depend on our choice of <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi></mrow><annotation encoding="application/x-tex">c</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">c</span></span></span></span>. The second is smallest at <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo>=</mo><mi>μ</mi><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">c=\mu(x)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal">c</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">μ</span><span class="mopen">(</span><span class="mord mathnormal">x</span><span class="mclose">)</span></span></span></span>. This explains why regression under squared loss aims at a conditional mean. It also shows why perfect prediction may be impossible even with the correct mean function: outcomes still vary around that mean.</p>
+<p>A different loss can change the target. Absolute-error prediction targets a conditional median. Therefore, “best prediction” is incomplete without saying how errors are measured.</p>
+<p><strong>Book connection:</strong> ISL introduces the learning problem and the role of error; IMS connects it to how observations were collected. Read those perspectives together: a sophisticated model cannot repair a population mismatch merely by fitting the observed sample well.</p></section></article><section id="illustration"><div class="section-heading"><h2>One dataset, different views</h2><span>Additional website illustration</span></div><p>A small preview using the supplied planets dataset. Choose a variable and inspect its range before choosing a model. The file includes Pluto as a historical teaching observation.</p><div class="controls"><label>Variable <select id="explore-variable"><option value="distance">Distance</option><option value="revolution">Revolution period</option><option value="diameter">Diameter</option></select></label></div><div id="explore-plot" class="plot" role="img" aria-label="Interactive data visualization"></div></section><section id="code"><details class="supplement"><summary>Extra practice: additional website notebook</summary><div class="section-heading"><h2>Try it in Python</h2><button class="copy" data-copy="code-1">Copy code</button></div><p>These additional examples are separate from the original class code embedded above. Download the notebook and get its CSV from the datasets folder.</p><div class="actions"><a class="button" href="examples/module-1.ipynb">Download example notebook</a><a class="button" href="examples/module-1.py">Download Python script</a></div><pre><code id="code-1">import pandas as pd
+import plotly.express as px
+
+# Upload PlanetsData.csv to Colab first.
+planets = pd.read_csv(&quot;PlanetsData.csv&quot;)
+print(planets.head())
+print(planets.dtypes)
+print(planets.isna().sum())
+print(planets.describe())
+
+px.bar(planets, x=&quot;planet&quot;, y=&quot;distance&quot;,
+       title=&quot;Inspect the range before fitting a model&quot;).show()
+px.scatter(planets, x=&quot;distance&quot;, y=&quot;revolution&quot;, text=&quot;planet&quot;,
+           title=&quot;Distance and revolution period&quot;).show()
+# What does one row represent? What shape do you see?
+</code></pre></details></section><section class="live-python textbook" id="run-python"><div class="eyebrow">TRY IT IN THE BOOK</div><h2>Run Python here</h2><p>Change the variable and compare its scale and shape.</p><p class="caption">The default result is shown below. Run it again, or reveal and edit the code. Python runs on your device; the first run downloads the runtime and packages. Edits and new results are not saved. The full class notebooks remain available in Colab.</p><details class="code-reveal"><summary>Show or edit Python</summary><label class="sr-only" for="live-editor-1">Editable Python example for module 1</label><textarea id="live-editor-1" spellcheck="false" autocapitalize="off" autocomplete="off">import pandas as pd
+import matplotlib.pyplot as plt
+
+planets = pd.read_csv(&quot;PlanetsData.csv&quot;)
+variable = &quot;revolution&quot;  # Try &quot;distance&quot; or &quot;diameter&quot;.
+print(planets[[&quot;planet&quot;, variable]].to_string(index=False))
+print(&quot;\nNumerical summary:&quot;)
+print(planets[variable].describe().round(2).to_string())
+plt.figure(figsize=(8, 4))
+plt.bar(planets[&quot;planet&quot;], planets[variable], color=&quot;#276582&quot;)
+plt.ylabel(variable + &quot; (dataset units)&quot;)
+plt.xticks(rotation=40)
+plt.title(&quot;Inspect the distribution before modeling&quot;)
+plt.tight_layout()
+plt.show()
+</textarea></details><div class="actions"><button class="button primary" data-run-python>Run Python</button><button class="button" data-stop-python disabled>Stop</button><button class="button" data-reset-python>Reset code</button><a class="button" href="live/module-1.py" download>Download script</a></div><p role="status" aria-live="polite">Ready. The output below was saved from the default example.</p><div class="live-output"><div class="output-label">DEFAULT EXAMPLE OUTPUT</div><pre class="notebook-text"> planet  revolution
+Mercury          88
+  Venus         225
+  Earth         365
+   Mars         687
+Jupiter        4332
+ Saturn       10760
+ Uranus       30684
+Neptune       60188
+  Pluto       90467
+
+Numerical summary:
+count        9.00
+mean     21977.33
+std      32666.04
+min         88.00
+25%        365.00
+50%       4332.00
+75%      30684.00
+max      90467.00
+</pre><img class="notebook-image" src="live/module-1-0.png" alt="Default plot for module 1 Python exercise" loading="lazy"></div></section><section id="readings" class="textbook"><h2>Suggested readings & reading questions</h2><p>Read in this order. The questions below identify what to bring back to this module.</p>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Reading</th>
+<th>Focus question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start here</td>
+<td><a href="https://www.statlearning.com/">ISL with Python, Chapter 2</a>: statistical learning, prediction versus inference, and assessing accuracy</td>
+<td>What are the inputs, target, loss, and intended future cases?</td>
+</tr>
+<tr>
+<td>Data foundations</td>
+<td><a href="https://openintro-ims.netlify.app/data-design">IMS 2e, Chapters 1–2</a>: data and study design</td>
+<td>What do sampling and assignment each justify?</td>
+</tr>
+<tr>
+<td>Applied practice</td>
+<td><a href="https://www.oreilly.com/library/view/practical-statistics-for/9781492072935/ch01.html">Practical Statistics, 2e, Chapter 1</a>: summaries, distributions, and relationships</td>
+<td>Which summary could conceal the pattern in a plot?</td>
+</tr>
+<tr>
+<td>Deeper theory</td>
+<td><a href="https://hastie.su.domains/ElemStatLearn/">ESL, 2e, Chapter 2</a>: supervised learning</td>
+<td>Why does squared-error prediction target a conditional mean?</td>
+</tr>
+</tbody>
+</table>
+<p><strong>After reading:</strong> Choose one column in a course dataset. Explain its type, units, missing-value treatment, and whether it would be available at prediction time. Then distinguish a description of this sample from a claim about a broader population.</p></section><div class="check"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h3>Why might a numerical-looking column have an object dtype?</h3><details><summary>Reveal explanation</summary><p>A mixture of numbers and text, inconsistent formatting, or special missing-value markers can cause a column to be read as text. Inspect the entries before converting; coercion can create missing values.</p></details></div><section id="practice" class="textbook optional-practice"><h2>Optional practice questions</h2><p>Want more practice? Try these questions after reading the chapter. They are for self-study; work through your reasoning before revealing an answer.</p><details class="practice-reveal"><summary>Reveal 5 practice questions</summary><ol class="practice-list"><li><h3>Define the prediction task</h3><p>A weather service wants to predict rain in Charlottesville tomorrow using hourly records from several cities. What is one observational unit, what is the response, and which inputs would be available when the prediction is made? Identify one input that would leak the answer.</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>One suitable unit is a city–day, with an indicator of rain on the following day as the response. Inputs could include weather observed up to the prediction time and forecasts issued by that time. Tomorrow's measured precipitation would leak the outcome. State the forecast horizon and distinguish an issued forecast from a later observation.</p></details></li><li><h3>Inspect before converting</h3><p>A sleep-hours column contains <code>7</code>, <code>6.5</code>, <code>seven</code>, and an empty entry and loads as <code>object</code>. Why is its dtype insufficient to decide whether it is a numerical variable? What would you inspect before converting it?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>Dtype describes storage, not scientific meaning. Sleep duration is numerical even when text values prevent numeric storage. Inspect unique values, missingness, units, and implausible ranges. An unambiguous entry such as <code>seven</code> can be recoded with a documented rule; treating every failed conversion as missing without inspection can hide errors.</p></details></li><li><h3>Choose an informative plot</h3><p>Using the planets dataset, propose one plot to describe orbital distance alone and another to explore how orbital period changes with distance. What can the second plot reveal that a correlation coefficient might conceal?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>A histogram or dot plot describes distance. A scatterplot of revolution period against distance displays their relationship. The scatterplot can reveal curvature, isolated observations, and uneven spacing that a single correlation coefficient does not describe. Axis labels should include the file's units.</p></details></li><li><h3>Make an API dataset usable</h3><p>An API returns temperature in Celsius, wind speed in km/h, and a numerical weather code. You convert temperature to Fahrenheit. What should change in the column name and documentation? Why should a weather-code average be treated cautiously?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>Use an explicit name such as <code>temperature_f</code>, document the conversion F = 1.8C + 32, and retain the meaning of the other units. Weather codes identify conditions; their numeric labels do not necessarily have meaningful distances. Frequencies by condition are generally more interpretable than their average.</p></details></li><li><h3>Try a small data audit</h3><p>Open the fictional survey dataset. Identify one missing-value issue and one inconsistent category, propose a cleaning rule for each, and explain how your rule could change a summary. You may use the module's Python example to inspect the data.</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>For example, blank sleep values require an explicit missing-data decision, and <code>iPhone</code> and <code>iphone</code> can be standardized to one label. Standardizing merges category counts. Dropping missing sleep values changes both the sample size and the population represented by a mean; report the denominator and justify the choice. Several valid audits are possible.</p></details></li></ol></details></section><div class="page-turn"><a class="" href="index.html">Course overview</a><a class="" href="module-2.html">Next module</a></div><footer>DS 6021 · Prince Afriyie <span>Use Canvas for current announcements, deadlines, and submissions.</span></footer></main></body></html>

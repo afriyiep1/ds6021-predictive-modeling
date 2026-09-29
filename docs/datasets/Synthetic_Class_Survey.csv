@@ -1,0 +1,49 @@
+Timestamp,What was your undergraduate major?,What type of phone do you have?,How many years ago did you receive your undergraduate degree?,How many hours do you sleep in a typical night?,Rate your proficiency with git/github,Rate your proficiency with Python,Have you ever used SQL?,What is your favorite sport to watch on tv?,What is your ideal outdoor temperature (in Fahrenheit)? ,How many US states have you visited?,What is your favorite season?
+2026/08/28 09:00:00,Engineering,iphone,2,8,3,1,No,Soccer,72,16,Summer
+2026/08/28 09:01:00,Engineering,iphone,2,,1,1,No,None,65,17,Winter
+2026/08/28 09:02:00,Statistics,Android,0,7,5,3,No,Soccer,68,12,Spring
+2026/08/28 09:03:00,Computer Science,iphone,1,6.5,5,4,Yes,Basketball,72,24,Summer
+2026/08/28 09:04:00,Computer Science,iPhone,5,,1,2,yes,None,70,26,Winter
+2026/08/28 09:05:00,Engineering,iPhone,3,8,3,3,Yes,Basketball,70,20,Spring
+2026/08/28 09:06:00,Computer Science,iPhone,1,7,5,2,No,Soccer,70,5,Winter
+2026/08/28 09:07:00,Economics,iPhone,3,,1,1,yes,None,72,25,Spring
+2026/08/28 09:08:00,Mathematics,iphone,3,,5,4,No,Basketball,75,15,Summer
+2026/08/28 09:09:00,Computer Science,Android,0,6.5,5,2,Yes,Tennis,70,26,Winter
+2026/08/28 09:10:00,Mathematics,Android,2,6.5,4,2,Yes,Soccer,70,8,Winter
+2026/08/28 09:11:00,Statistics,iPhone,2,8,2,3,Yes,None,70,2,Winter
+2026/08/28 09:12:00,Computer Science,iPhone,3,seven,4,3,No,Tennis,75,4,Fall
+2026/08/28 09:13:00,Engineering,iphone,3,6.5,3,5,Yes,Basketball,70,28,Fall
+2026/08/28 09:14:00,Mathematics,iPhone,0,6,5,2,yes,Basketball,65,9,Summer
+2026/08/28 09:15:00,Mathematics,iPhone,5,6,2,3,No,None,72,18,Fall
+2026/08/28 09:16:00,Engineering,iphone,1,6,1,4,Yes,Soccer,68,4,Spring
+2026/08/28 09:17:00,Engineering,iphone,3,6.5,1,5,No,Tennis,68,19,Winter
+2026/08/28 09:18:00,Mathematics,iPhone,0,8,5,3,Yes,Tennis,68,6,Fall
+2026/08/28 09:19:00,Statistics,Android,3,8,5,1,Yes,None,72,15,Winter
+2026/08/28 09:20:00,Economics,Android,0,seven,5,5,No,Tennis,70,5,Summer
+2026/08/28 09:21:00,Statistics,iphone,1,8,1,2,yes,Soccer,68,9,Fall
+2026/08/28 09:22:00,Computer Science,Android,0,7,3,2,Yes,Basketball,70,13,Spring
+2026/08/28 09:23:00,Mathematics,iphone,3,6,5,4,yes,Soccer,65,17,Fall
+2026/08/28 09:24:00,Economics,iPhone,5,6,2,4,No,Tennis,68,7,Fall
+2026/08/28 09:25:00,Computer Science,iPhone,3,7,4,1,Yes,None,65,27,Fall
+2026/08/28 09:26:00,Engineering,Android,5,seven,1,5,yes,None,75,22,Summer
+2026/08/28 09:27:00,Computer Science,iphone,2,7,5,3,Yes,Soccer,68,30,Fall
+2026/08/28 09:28:00,Engineering,Android,3,seven,2,1,Yes,None,72,8,Fall
+2026/08/28 09:29:00,Engineering,iPhone,5,,2,3,No,Tennis,75,15,Fall
+2026/08/28 09:30:00,Economics,iPhone,2,6.5,5,4,yes,Soccer,65,24,Winter
+2026/08/28 09:31:00,Economics,Android,2,seven,5,1,No,Tennis,65,16,Winter
+2026/08/28 09:32:00,Statistics,Android,1,7,1,4,yes,Basketball,70,11,Fall
+2026/08/28 09:33:00,Statistics,Android,2,seven,3,5,yes,Basketball,75,15,Spring
+2026/08/28 09:34:00,Computer Science,Android,1,8,1,1,No,Soccer,72,6,Spring
+2026/08/28 09:35:00,Statistics,Android,3,,3,1,Yes,Basketball,68,26,Fall
+2026/08/28 09:36:00,Engineering,iPhone,2,6,4,5,yes,Basketball,70,14,Spring
+2026/08/28 09:37:00,Statistics,Android,0,seven,5,1,Yes,Soccer,72,21,Spring
+2026/08/28 09:38:00,Engineering,iPhone,5,6.5,4,3,yes,Soccer,72,2,Summer
+2026/08/28 09:39:00,Economics,Android,1,6,4,3,yes,None,72,3,Winter
+2026/08/28 09:40:00,Computer Science,iphone,0,seven,3,4,Yes,None,72,3,Summer
+2026/08/28 09:41:00,Engineering,Android,5,seven,4,3,Yes,Soccer,65,29,Spring
+2026/08/28 09:42:00,Economics,Android,3,8,4,2,yes,None,72,8,Winter
+2026/08/28 09:43:00,Mathematics,iPhone,1,6.5,3,3,No,None,65,22,Fall
+2026/08/28 09:44:00,Engineering,iphone,3,seven,5,1,No,Soccer,65,7,Summer
+2026/08/28 09:45:00,Computer Science,iPhone,2,7,4,2,Yes,Tennis,72,18,Winter
+2026/08/28 09:46:00,Computer Science,iPhone,3,6.5,3,4,Yes,Tennis,68,23,Winter
+2026/08/28 09:47:00,Economics,iphone,0,,1,5,yes,Basketball,75,14,Fall

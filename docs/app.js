@@ -1,0 +1,4 @@
+const menu = document.getElementById('menu');
+menu?.addEventListener('click', () => {const open = document.getElementById('sidebar').classList.toggle('open');menu.setAttribute('aria-expanded',String(open));});
+document.addEventListener('keydown', e => {if(e.key==='Escape'){document.getElementById('sidebar').classList.remove('open');menu?.setAttribute('aria-expanded','false');}});
+document.querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',async()=>{const text=document.getElementById(button.dataset.copy).textContent;try{await navigator.clipboard.writeText(text);button.textContent='Copied';}catch{const range=document.createRange();range.selectNodeContents(document.getElementById(button.dataset.copy));const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);button.textContent='Select & copy';}setTimeout(()=>button.textContent='Copy code',2000);}));

@@ -1,0 +1,1 @@
+{"text": " Model  Test RMSE  Test R2\nLinear   7237.231    0.945\nPoly 3   6451.959    0.957\nPoly 8   6528.369    0.955\nSpline   8297.595    0.928\nThese scores assess one held-out split, not cross-validation.\n", "images": ["/live/module-6-0.png"]}

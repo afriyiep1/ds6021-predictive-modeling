@@ -1,0 +1,1117 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Multiple regression, uncertainty &amp; diagnostics · DS 6021</title><meta name="description" content="DS 6021: Introduction to Predictive Modeling. An open textbook with concepts, mathematics, Python examples, and optional practice questions."><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23232d4b'/%3E%3Cpath d='M7 24V8M7 24h19M9 21l6-7 5 3 6-10' fill='none' stroke='%23ef8c45' stroke-width='2.5'/%3E%3C/svg%3E"><link rel="stylesheet" href="vendor/katex/katex.min.css"><link rel="stylesheet" href="styles.css"><script defer src="app.js"></script><script defer src="readers.js"></script><script defer src="live-python.js"></script><script defer src="demo-data.js"></script><script defer src="demos.js"></script></head><body><a class="skip" href="#main">Skip to content</a><header class="mobile-header"><a href="index.html">DS 6021</a><button id="menu" aria-controls="sidebar" aria-expanded="false">Course menu</button></header><aside id="sidebar"><a class="brand" href="index.html"><span class="brand-mark">DS</span><span>6021<span class="brand-sub">PREDICTIVE MODELING</span></span></a><p class="term">UNIVERSITY OF VIRGINIA</p><nav aria-label="Course"><a class="navlink " href="index.html">Course overview</a><div class="nav-label">THE COURSE</div><a class="navlink " href="module-1.html">01  Data &amp; questions</a><a class="navlink " href="module-2.html">02  Inference &amp; experiments</a><a class="navlink " href="module-3.html">03  Regression &amp; optimization</a><a class="navlink active" href="module-4.html">04  Multiple regression</a><a class="navlink " href="module-5.html">05  Interactions &amp; transforms</a><a class="navlink " href="module-6.html">06  Generalization</a><div class="nav-label">RESOURCES</div><a class="navlink " href="labs.html">Labs &amp; project</a><a class="navlink " href="resources.html">Book guide &amp; references</a><a class="navlink " href="datasets/">Datasets</a></nav><div class="sidebar-foot">Prince Afriyie<br><span>School of Data Science</span></div></aside><main id="main"><div class="topline"><span>UNIVERSITY OF VIRGINIA <b>/</b> MS IN DATA SCIENCE</span><span>AN OPEN COURSE BOOK</span></div><div class="eyebrow">CHAPTER 04</div><h1 class="page-title">Multiple regression, uncertainty &amp; diagnostics</h1><p class="lede">Add predictors, encode categories, quantify coefficient uncertainty, and examine model assumptions.</p><div class="anchor-nav"><a href="#materials">Chapter & class code</a><a href="#run-python">Run Python</a><a href="#illustration">Illustration</a><a href="#code">Extra practice</a><a href="#readings">Readings</a><a href="#practice">Optional questions</a></div><div class="code-controls"><button class="button" data-code-visibility aria-pressed="false">Show all code</button><span>Read the outputs first; reveal code when useful.</span></div><section id="materials"><h2 class="toc-title">In this chapter</h2><ol class="lesson-index"><li><a href="#lesson-1">Fit multiple predictors together</a></li><li><a href="#lesson-2">Quantify coefficient uncertainty</a></li><li><a href="#lesson-3">Connect regression to neural networks</a></li><li><a href="#lesson-4">Encode categories and fit the pipeline</a></li><li><a href="#lesson-5">Diagnose residuals and interpret fit</a></li></ol><p class="caption">Lecture concepts and original notebook cells, together in one continuous chapter. Saved outputs are visible; original code is available on demand. The browser exercise below is editable and runnable here.</p></section><article class="textbook"><section class="lesson-section" id="lesson-1"><h2><span class="chapter-number">4.1</span> Fit multiple predictors together</h2><p>Multiple regression models the response using several predictors simultaneously:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mi>Y</mi><mi>i</mi></msub><mo>=</mo><msub><mi>β</mi><mn>0</mn></msub><mo>+</mo><msub><mi>β</mi><mn>1</mn></msub><msub><mi>x</mi><mrow><mi>i</mi><mn>1</mn></mrow></msub><mo>+</mo><mo>⋯</mo><mo>+</mo><msub><mi>β</mi><mi>p</mi></msub><msub><mi>x</mi><mrow><mi>i</mi><mi>p</mi></mrow></msub><mo>+</mo><msub><mi>ε</mi><mi>i</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">Y_i=\beta_0+\beta_1x_{i1}+\cdots+\beta_px_{ip}+\varepsilon_i.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.2222em;">Y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.2222em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0528em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.0528em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="minner">⋯</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.9805em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0528em;">β</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.0528em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">p</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">ε</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>The fitted coefficient <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>j</mi></msub></mrow><annotation encoding="application/x-tex">b_j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.9805em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span> is the change in fitted response for a one-unit change in predictor <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0572em;">j</span></span></span></span>, <strong>holding the other included predictors fixed</strong>. It is not automatically a causal effect. The insurance example models charges using age, BMI, and number of children.</p>
+<h3>The design matrix</h3>
+<p>Put the intercept column and predictors into an <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>×</mo><mo stretchy="false">(</mo><mi>p</mi><mo>+</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">n\times(p+1)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span> matrix <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi></mrow><annotation encoding="application/x-tex">X</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span></span></span></span>. Then</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="bold">y</mi><mo>=</mo><mi>X</mi><mi mathvariant="bold-italic">β</mi><mo>+</mo><mi mathvariant="bold-italic">ε</mi><mo separator="true">,</mo><mspace width="2em"/><mover accent="true"><mi mathvariant="bold">y</mi><mo stretchy="true">^</mo></mover><mo>=</mo><mi>X</mi><mi mathvariant="bold">b</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\mathbf y=X\boldsymbol\beta+\boldsymbol\varepsilon,\qquad \widehat{\mathbf y}=X\mathbf b.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6389em;vertical-align:-0.1944em;"></span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mord"><span class="mord"><span class="mord boldsymbol" style="margin-right:0.034em;">β</span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8789em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord"><span class="mord boldsymbol">ε</span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord katex-accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6844em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathbf" style="margin-right:0.016em;">y</span></span><span class="svg-align" style="top:-3.4444em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mord mathbf">b</span><span class="mord">.</span></span></span></span></span></p>
+<p>Minimizing <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">∥</mi><mi mathvariant="bold">y</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold">b</mi><msubsup><mi mathvariant="normal">∥</mi><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">\|\mathbf y-X\mathbf b\|_2^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">∥</span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0641em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mord mathbf">b</span><span class="mord"><span class="mord">∥</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-2.4519em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2481em;"><span></span></span></span></span></span></span></span></span></span> gives gradient <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mn>2</mn><msup><mi>X</mi><mi mathvariant="sans-serif">T</mi></msup><mo stretchy="false">(</mo><mi mathvariant="bold">y</mi><mo>−</mo><mi>X</mi><mi mathvariant="bold">b</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">-2X^\mathsf T(\mathbf y-X\mathbf b)</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.0991em;vertical-align:-0.25em;"></span><span class="mord">−</span><span class="mord">2</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8491em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathsf mtight">T</span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mord mathbf">b</span><span class="mclose">)</span></span></span></span>. Setting it to zero produces the normal equations:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msup><mi>X</mi><mi mathvariant="sans-serif">T</mi></msup><mi>X</mi><mi mathvariant="bold">b</mi><mo>=</mo><msup><mi>X</mi><mi mathvariant="sans-serif">T</mi></msup><mi mathvariant="bold">y</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">X^\mathsf T X\mathbf b=X^\mathsf T\mathbf y.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8991em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathsf mtight">T</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mord mathbf">b</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.0935em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathsf mtight">T</span></span></span></span></span></span></span></span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mord">.</span></span></span></span></span></p>
+<p>If <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>X</mi></mrow><annotation encoding="application/x-tex">X</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span></span></span></span> has full column rank, the unique solution is</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="bold">b</mi><mo>=</mo><mo stretchy="false">(</mo><msup><mi>X</mi><mi mathvariant="sans-serif">T</mi></msup><mi>X</mi><msup><mo stretchy="false">)</mo><mrow><mo>−</mo><mn>1</mn></mrow></msup><msup><mi>X</mi><mi mathvariant="sans-serif">T</mi></msup><mi mathvariant="bold">y</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\mathbf b=(X^\mathsf T X)^{-1}X^\mathsf T\mathbf y.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathbf">b</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1491em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathsf mtight">T</span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">X</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8991em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathsf mtight">T</span></span></span></span></span></span></span></span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mord">.</span></span></span></span></span></p>
+<p>An exact linear dependence makes this inverse unavailable. Highly correlated columns can also make coefficients unstable. The explicit inverse below teaches the formula; numerical least-squares solvers are generally preferable in working code.</p>
+<h3>What “holding other predictors fixed” means mathematically</h3>
+<p>The coefficient of BMI in a multiple regression need not match the coefficient from a BMI-only regression. A useful interpretation is to remove from BMI the part explained by the other included predictors, remove the corresponding fitted part from the response, and regress the remaining response variation on the remaining BMI variation. This residual-on-residual slope equals the multiple-regression BMI coefficient when the design has full rank.</p>
+<p>If little independent BMI variation remains, estimating its separate association becomes difficult. This explains why correlated predictors can yield stable predictions but unstable individual coefficients. Exact dependence prevents unique coefficients; strong but imperfect dependence increases sensitivity rather than making fitting categorically impossible.</p><aside class="teaching-note">The explicit inverse illustrates the formula when the design has full column rank. Numerical solvers used by modeling libraries are preferable to explicitly inverting XᵀX in general-purpose code.</aside><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>Multiple Regression</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/multiple.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="multiple" data-cell="0"><details class="code-reveal"><summary>Show Python · Cell 1</summary><div class="cell-header"><span>Cell 1</span><button class="copy" data-copy="codegroup-13-0">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-0">import pandas as pd
+import numpy as np
+import plotly.express as px</code></pre></details></div><div class="notebook-cell" data-book="multiple" data-cell="1"><details class="code-reveal"><summary>Show Python · Cell 2</summary><div class="cell-header"><span>Cell 2</span><button class="copy" data-copy="codegroup-13-1">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-1">insurance = pd.read_csv(&quot;insurance.csv&quot;)
+
+insurance.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>age</th>
+      <th>sex</th>
+      <th>bmi</th>
+      <th>children</th>
+      <th>smoker</th>
+      <th>region</th>
+      <th>charges</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19</td>
+      <td>female</td>
+      <td>27.900</td>
+      <td>0</td>
+      <td>yes</td>
+      <td>southwest</td>
+      <td>16884.92400</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>18</td>
+      <td>male</td>
+      <td>33.770</td>
+      <td>1</td>
+      <td>no</td>
+      <td>southeast</td>
+      <td>1725.55230</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>28</td>
+      <td>male</td>
+      <td>33.000</td>
+      <td>3</td>
+      <td>no</td>
+      <td>southeast</td>
+      <td>4449.46200</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>33</td>
+      <td>male</td>
+      <td>22.705</td>
+      <td>0</td>
+      <td>no</td>
+      <td>northwest</td>
+      <td>21984.47061</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>32</td>
+      <td>male</td>
+      <td>28.880</td>
+      <td>0</td>
+      <td>no</td>
+      <td>northwest</td>
+      <td>3866.85520</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="2"><details class="code-reveal"><summary>Show Python · Cell 3</summary><div class="cell-header"><span>Cell 3</span><button class="copy" data-copy="codegroup-13-2">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-2">insurance_long = insurance.melt(
+    id_vars=&quot;charges&quot;,
+    value_vars=[&quot;age&quot;, &quot;bmi&quot;, &quot;children&quot;],
+    var_name=&quot;predictor&quot;,
+    value_name=&quot;value&quot;
+)
+
+fig = px.scatter(
+    insurance_long,
+    x=&quot;value&quot;,
+    y=&quot;charges&quot;,
+    facet_col=&quot;predictor&quot;,
+    facet_col_wrap=3,
+    trendline=&quot;ols&quot;,
+    opacity=0.5,
+    title=&quot;Exploring Linear Relationships with Insurance Charges&quot;,
+    labels={
+        &quot;value&quot;: &quot;Predictor Value&quot;,
+        &quot;charges&quot;: &quot;Insurance Charges ($)&quot;
+    }
+)
+
+fig.update_xaxes(matches=None)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/multiple-2-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="3"><details class="code-reveal"><summary>Show Python · Cell 4</summary><div class="cell-header"><span>Cell 4</span><button class="copy" data-copy="codegroup-13-3">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-3">y = insurance[&quot;charges&quot;]
+
+X = insurance[[&quot;age&quot;,&quot;bmi&quot;,&quot;children&quot;]]
+Z = insurance[[&quot;age&quot;,&quot;bmi&quot;,&quot;children&quot;, &quot;charges&quot;]]</code></pre></details></div><div class="notebook-cell" data-book="multiple" data-cell="4"><details class="code-reveal"><summary>Show Python · Cell 5</summary><div class="cell-header"><span>Cell 5</span><button class="copy" data-copy="codegroup-13-4">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-4">corr = Z.corr()
+
+fig = px.imshow(
+    corr,
+    text_auto=&quot;.2f&quot;,
+    aspect=&quot;auto&quot;,
+    color_continuous_scale=&quot;RdBu_r&quot;,
+    zmin=-1,
+    zmax=1,
+    title=&quot;Correlation Matrix of Predictors&quot;
+)
+
+fig.update_layout(
+    xaxis_title=&quot;&quot;,
+    yaxis_title=&quot;&quot;,
+    coloraxis_colorbar_title=&quot;Correlation&quot;
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/multiple-4-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="5"><details class="code-reveal"><summary>Show Python · Cell 6</summary><div class="cell-header"><span>Cell 6</span><button class="copy" data-copy="codegroup-13-5">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-5">import statsmodels.api as sm</code></pre></details></div><div class="notebook-cell" data-book="multiple" data-cell="6"><details class="code-reveal"><summary>Show Python · Cell 7</summary><div class="cell-header"><span>Cell 7</span><button class="copy" data-copy="codegroup-13-6">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-6">X_des = sm.add_constant(X)
+
+X_des.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>const</th>
+      <th>age</th>
+      <th>bmi</th>
+      <th>children</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>19</td>
+      <td>27.900</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>18</td>
+      <td>33.770</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>28</td>
+      <td>33.000</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1.0</td>
+      <td>33</td>
+      <td>22.705</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1.0</td>
+      <td>32</td>
+      <td>28.880</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="7"><details class="code-reveal"><summary>Show Python · Cell 8</summary><div class="cell-header"><span>Cell 8</span><button class="copy" data-copy="codegroup-13-7">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-7">X_matrix = X_des.to_numpy(dtype=float)
+y_vector = y.to_numpy(dtype=float)
+
+beta_hat = (
+    np.linalg.inv(X_matrix.T @ X_matrix)
+    @ X_matrix.T
+    @ y_vector
+)
+
+beta_hat</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><pre class="notebook-text">array([-6916.24334779,   239.99447429,   332.0833645 ,   542.86465225])</pre></div></div><div class="notebook-cell" data-book="multiple" data-cell="8"><details class="code-reveal"><summary>Show Python · Cell 9</summary><div class="cell-header"><span>Cell 9</span><button class="copy" data-copy="codegroup-13-8">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-8">from sklearn.linear_model import LinearRegression
+
+ols = LinearRegression()
+
+ols.fit(X, y)</code></pre></details></div><div class="notebook-cell" data-book="multiple" data-cell="9"><details class="code-reveal"><summary>Show Python · Cell 10</summary><div class="cell-header"><span>Cell 10</span><button class="copy" data-copy="codegroup-13-9">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-9">print(&quot;Intercept:&quot;, ols.intercept_)
+print(&quot;Coefficients:&quot;, ols.coef_)</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><pre class="notebook-text">Intercept: -6916.243347787033
+Coefficients: [239.99447429 332.0833645  542.86465225]
+</pre></div></div><div class="notebook-cell" data-book="multiple" data-cell="10"><details class="code-reveal"><summary>Show Python · Cell 11</summary><div class="cell-header"><span>Cell 11</span><button class="copy" data-copy="codegroup-13-10">Copy cell</button></div><pre class="source-code"><code id="codegroup-13-10">original_coefs = pd.Series(
+    [
+        ols.intercept_,
+        *ols.coef_
+    ],
+    index=[
+        &quot;Intercept&quot;,
+        &quot;age&quot;,
+        &quot;bmi&quot;,
+        &quot;children&quot;
+    ]
+)
+
+original_coefs</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>0</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Intercept</th>
+      <td>-6916.243348</td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td>239.994474</td>
+    </tr>
+    <tr>
+      <th>bmi</th>
+      <td>332.083365</td>
+    </tr>
+    <tr>
+      <th>children</th>
+      <td>542.864652</td>
+    </tr>
+  </tbody>
+</table></div></div></div><p class="notebook-download"><a href="notebooks/multiple.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section><section class="lesson-section" id="lesson-2"><h2><span class="chapter-number">4.2</span> Quantify coefficient uncertainty</h2><p>A fitted coefficient is an estimate and varies with the sample. A <strong>pairs bootstrap</strong> samples rows of the modeling table with replacement, preserving the response and all predictors together. Refit the same model for each sample.</p>
+<p>For coefficient <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi></mrow><annotation encoding="application/x-tex">j</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.0572em;">j</span></span></span></span>, a bootstrap standard-error estimate is</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi mathvariant="normal">SE</mi><mo>⁡</mo><mo stretchy="true">^</mo></mover><mo stretchy="false">(</mo><msub><mi>b</mi><mi>j</mi></msub><mo stretchy="false">)</mo><mo>=</mo><msqrt><mrow><mfrac><mn>1</mn><mrow><mi>B</mi><mo>−</mo><mn>1</mn></mrow></mfrac><munderover><mo>∑</mo><mrow><mi>r</mi><mo>=</mo><mn>1</mn></mrow><mi>B</mi></munderover><msup><mrow><mo fence="true">(</mo><msubsup><mi>b</mi><mi>j</mi><mrow><mo>∗</mo><mo stretchy="false">(</mo><mi>r</mi><mo stretchy="false">)</mo></mrow></msubsup><mo>−</mo><msubsup><mover accent="true"><mi>b</mi><mo stretchy="true">‾</mo></mover><mi>j</mi><mo>∗</mo></msubsup><mo fence="true">)</mo></mrow><mn>2</mn></msup></mrow></msqrt><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\widehat{\operatorname{SE}}(b_j)=\sqrt{\frac{1}{B-1}\sum_{r=1}^B\left(b_j^{*(r)}-\overline b_j^*\right)^2}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.2094em;vertical-align:-0.2861em;"></span><span class="mord katex-accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.9233em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mop"><span class="mord mathrm">SE</span></span></span><span class="svg-align" style="top:-3.6833em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:3.3232em;vertical-align:-1.2671em;"></span><span class="mord sqrt"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:2.0561em;"><span class="svg-align" style="top:-5.2832em;"><span class="pstrut" style="height:5.2832em;"></span><span class="mord" style="padding-left:1.056em;"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0502em;">B</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.7693em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.8283em;"><span style="top:-1.8829em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0278em;">r</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size2">(</span></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.0448em;"><span style="top:-2.4231em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span><span style="top:-3.2198em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∗</span><span class="mopen mtight">(</span><span class="mord mathnormal mtight" style="margin-right:0.0278em;">r</span><span class="mclose mtight">)</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.413em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord katex-overline"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">b</span></span></span><span style="top:-3.8144em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.973em;"><span style="top:-2.453em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span><span style="top:-3.3473em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size2">)</span></span></span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.354em;"><span style="top:-3.6029em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-4.0161em;"><span class="pstrut" style="height:5.2832em;"></span><span class="hide-tail" style="min-width:0.742em;height:3.3632em;"><svg xmlns="http://www.w3.org/2000/svg" width="400em" height="3.3632em" viewBox="0 0 400000 3363" preserveAspectRatio="xMinYMin slice"><path d="M702 80H40000040
+H742v3229l-4 4-4 4c-.667.7 -2 1.5-4 2.5s-4.167 1.833-6.5 2.5-5.5 1-9.5 1
+h-12l-28-84c-16.667-52-96.667 -294.333-240-727l-212 -643 -85 170
+c-4-3.333-8.333-7.667-13 -13l-13-13l77-155 77-156c66 199.333 139 419.667
+219 661 l218 661zM702 80H400000v40H742z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2671em;"><span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>Use the 2.5th and 97.5th percentiles for an approximate 95% percentile interval. Interpret its units and conditional meaning. A coefficient interval does not describe where 95% of individual responses lie.</p>
+<p>Row resampling assumes rows are appropriate independent sampling units. Keep encoding and predictor definitions consistent across refits. Increasing <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0502em;">B</span></span></span></span> reduces Monte Carlo noise, but does not remedy a biased sample, dependent observations, or a misspecified model.</p>
+<h3>Read a bootstrap interval without overclaiming</h3>
+<p>Suppose an illustrative coefficient interval is 120 to 210 dollars per unit of BMI. The endpoints concern the conditional slope under the specified model and sampling assumptions. They do not say that 95% of individual charges lie in this range, or that a one-unit intervention on BMI causes this change.</p>
+<p>The pairs bootstrap treats the observed rows as an empirical population, drawing complete cases repeatedly. A residual bootstrap holds predictors fixed and resamples errors under an assumed error structure. They answer related questions through different approximations; choosing between them requires attention to how the observations arose.</p><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>Multiple Regression</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/multiple.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="multiple" data-cell="11"><details class="code-reveal"><summary>Show Python · Cell 12</summary><div class="cell-header"><span>Cell 12</span><button class="copy" data-copy="codegroup-14-11">Copy cell</button></div><pre class="source-code"><code id="codegroup-14-11">np.random.seed(6021)
+
+B = 1000
+n = len(X)
+
+bootstrap_coefs = []
+
+for b in range(B):
+
+    bootstrap_index = np.random.choice(
+        n,
+        size=n,
+        replace=True
+    )
+
+    X_boot = X.iloc[bootstrap_index]
+    y_boot = y.iloc[bootstrap_index]
+
+
+    model_boot = LinearRegression()
+    model_boot.fit(X_boot, y_boot)
+
+
+    bootstrap_coefs.append([
+        model_boot.intercept_,
+        *model_boot.coef_
+    ])
+
+bootstrap_coefs = pd.DataFrame(
+    bootstrap_coefs,
+    columns=[
+        &quot;Intercept&quot;,
+        &quot;age&quot;,
+        &quot;bmi&quot;,
+        &quot;children&quot;
+    ]
+)
+
+bootstrap_coefs.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Intercept</th>
+      <th>age</th>
+      <th>bmi</th>
+      <th>children</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>-6643.761764</td>
+      <td>241.031777</td>
+      <td>325.163587</td>
+      <td>542.435981</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>-6226.458862</td>
+      <td>241.968722</td>
+      <td>316.844095</td>
+      <td>588.516551</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>-7706.361664</td>
+      <td>224.222810</td>
+      <td>367.299150</td>
+      <td>775.705634</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>-8140.802973</td>
+      <td>258.126000</td>
+      <td>366.051021</td>
+      <td>460.367530</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>-8798.730296</td>
+      <td>231.529496</td>
+      <td>424.374473</td>
+      <td>263.487228</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="12"><details class="code-reveal"><summary>Show Python · Cell 13</summary><div class="cell-header"><span>Cell 13</span><button class="copy" data-copy="codegroup-14-12">Copy cell</button></div><pre class="source-code"><code id="codegroup-14-12">bootstrap_summary = pd.DataFrame({
+    &quot;OLS Estimate&quot;: original_coefs,
+    &quot;Bootstrap Mean&quot;: bootstrap_coefs.mean(),
+    &quot;Bootstrap SE&quot;: bootstrap_coefs.std()
+})
+
+bootstrap_summary.round(2)</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>OLS Estimate</th>
+      <th>Bootstrap Mean</th>
+      <th>Bootstrap SE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Intercept</th>
+      <td>-6916.24</td>
+      <td>-6897.90</td>
+      <td>1713.76</td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td>239.99</td>
+      <td>240.31</td>
+      <td>22.08</td>
+    </tr>
+    <tr>
+      <th>bmi</th>
+      <td>332.08</td>
+      <td>330.87</td>
+      <td>57.15</td>
+    </tr>
+    <tr>
+      <th>children</th>
+      <td>542.86</td>
+      <td>534.97</td>
+      <td>233.17</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="13"><details class="code-reveal"><summary>Show Python · Cell 14</summary><div class="cell-header"><span>Cell 14</span><button class="copy" data-copy="codegroup-14-13">Copy cell</button></div><pre class="source-code"><code id="codegroup-14-13">fig = px.histogram(
+    bootstrap_coefs,
+    x=&quot;Intercept&quot;,
+    nbins=30,
+    title=&quot;Bootstrap Sampling Distribution of the Intercept&quot;,
+    labels={&quot;Intercept&quot;: &quot;Bootstrap Estimate of Intercept&quot;}
+)
+
+fig.add_vline(
+    x=original_coefs[&quot;Intercept&quot;],
+    line_dash=&quot;dash&quot;
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/multiple-13-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="14"><details class="code-reveal"><summary>Show Python · Cell 15</summary><div class="cell-header"><span>Cell 15</span><button class="copy" data-copy="codegroup-14-14">Copy cell</button></div><pre class="source-code"><code id="codegroup-14-14">fig = px.histogram(
+    bootstrap_coefs,
+    x=&quot;age&quot;,
+    nbins=30,
+    title=&quot;Bootstrap Sampling Distribution of the Age Coefficient&quot;,
+    labels={&quot;age&quot;: &quot;Bootstrap Estimate of Age Coefficient&quot;}
+)
+
+fig.add_vline(
+    x=original_coefs[&quot;age&quot;],
+    line_dash=&quot;dash&quot;
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/multiple-14-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="15"><details class="code-reveal"><summary>Show Python · Cell 16</summary><div class="cell-header"><span>Cell 16</span><button class="copy" data-copy="codegroup-14-15">Copy cell</button></div><pre class="source-code"><code id="codegroup-14-15">fig = px.histogram(
+    bootstrap_coefs,
+    x=&quot;bmi&quot;,
+    nbins=30,
+    title=&quot;Bootstrap Sampling Distribution of the BMI Coefficient&quot;,
+    labels={&quot;bmi&quot;: &quot;Bootstrap Estimate of BMI Coefficient&quot;}
+)
+
+fig.add_vline(
+    x=original_coefs[&quot;bmi&quot;],
+    line_dash=&quot;dash&quot;
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/multiple-15-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="multiple" data-cell="16"><details class="code-reveal"><summary>Show Python · Cell 17</summary><div class="cell-header"><span>Cell 17</span><button class="copy" data-copy="codegroup-14-16">Copy cell</button></div><pre class="source-code"><code id="codegroup-14-16">bootstrap_ci = pd.DataFrame({
+    &quot;Estimate&quot;: original_coefs,
+    &quot;Bootstrap SE&quot;: bootstrap_coefs.std(),
+    &quot;Lower 2.5%&quot;: bootstrap_coefs.quantile(0.025),
+    &quot;Upper 97.5%&quot;: bootstrap_coefs.quantile(0.975)
+})
+
+bootstrap_ci</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>Estimate</th>
+      <th>Bootstrap SE</th>
+      <th>Lower 2.5%</th>
+      <th>Upper 97.5%</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Intercept</th>
+      <td>-6916.243348</td>
+      <td>1713.759775</td>
+      <td>-10494.306915</td>
+      <td>-3663.216648</td>
+    </tr>
+    <tr>
+      <th>age</th>
+      <td>239.994474</td>
+      <td>22.084201</td>
+      <td>197.056521</td>
+      <td>283.628010</td>
+    </tr>
+    <tr>
+      <th>bmi</th>
+      <td>332.083365</td>
+      <td>57.147955</td>
+      <td>223.070845</td>
+      <td>449.116376</td>
+    </tr>
+    <tr>
+      <th>children</th>
+      <td>542.864652</td>
+      <td>233.166023</td>
+      <td>90.655936</td>
+      <td>1001.365717</td>
+    </tr>
+  </tbody>
+</table></div></div></div><p class="notebook-download"><a href="notebooks/multiple.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section><section class="lesson-section" id="lesson-3"><h2><span class="chapter-number">4.3</span> Connect regression to neural networks</h2><p>A neuron begins with the same weighted sum used in regression:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>z</mi><mo>=</mo><mi>b</mi><mo>+</mo><munderover><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mi>p</mi></munderover><msub><mi>w</mi><mi>j</mi></msub><msub><mi>x</mi><mi>j</mi></msub><mo separator="true">,</mo><mspace width="2em"/><mi>h</mi><mo>=</mo><mi>ϕ</mi><mo stretchy="false">(</mo><mi>z</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">z=b+\sum_{j=1}^p w_jx_j,\qquad h=\phi(z).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7778em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">b</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:3.1123em;vertical-align:-1.4138em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6985em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span><span class="mrel mtight">=</span><span class="mord mtight">1</span></span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.3471em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">p</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.4138em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0269em;">w</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0269em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0572em;">j</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">ϕ</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></p>
+<p>The weights play a role analogous to regression coefficients; the bias corresponds to an intercept. An activation function transforms the sum. One example is the rectified linear unit:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">ReLU</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>z</mi><mo stretchy="false">)</mo><mo>=</mo><mi>max</mi><mo>⁡</mo><mo stretchy="false">(</mo><mn>0</mn><mo separator="true">,</mo><mi>z</mi><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\operatorname{ReLU}(z)=\max(0,z).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop"><span class="mord mathrm">ReLU</span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mop">max</span><span class="mopen">(</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.044em;">z</span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></p>
+<p>Stacking only linear or affine layers still gives an affine function. Nonlinear activations allow layers to represent more complex relationships. A multilayer model composes these operations, and gradient-based learning adjusts its parameters using derivatives propagated through the composition.</p>
+<p>This connects familiar regression to neural networks without making their parameters equally interpretable. In a network, the effect of one input usually depends on other inputs, learned weights, and active nonlinearities. Greater expressive capacity also increases the need for careful evaluation and control of overfitting.</p>
+<h3>Why stacking linear layers is not enough</h3>
+<p>Suppose a first layer computes <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold">h</mi><mo>=</mo><msub><mi>W</mi><mn>1</mn></msub><mi mathvariant="bold">x</mi><mo>+</mo><msub><mi mathvariant="bold">b</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf h=W_1\mathbf x+\mathbf b_1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6944em;"></span><span class="mord mathbf">h</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathbf">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathbf">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and the next computes <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="bold">y</mi><mo>=</mo><msub><mi>W</mi><mn>2</mn></msub><mi mathvariant="bold">h</mi><mo>+</mo><msub><mi mathvariant="bold">b</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf y=W_2\mathbf h+\mathbf b_2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6389em;vertical-align:-0.1944em;"></span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathbf">h</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathbf">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>. Substitution gives</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="bold">y</mi><mo>=</mo><mo stretchy="false">(</mo><msub><mi>W</mi><mn>2</mn></msub><msub><mi>W</mi><mn>1</mn></msub><mo stretchy="false">)</mo><mi mathvariant="bold">x</mi><mo>+</mo><mo stretchy="false">(</mo><msub><mi>W</mi><mn>2</mn></msub><msub><mi mathvariant="bold">b</mi><mn>1</mn></msub><mo>+</mo><msub><mi mathvariant="bold">b</mi><mn>2</mn></msub><mo stretchy="false">)</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\mathbf y=(W_2W_1)\mathbf x+(W_2\mathbf b_1+\mathbf b_2).</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6389em;vertical-align:-0.1944em;"></span><span class="mord mathbf" style="margin-right:0.016em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord mathbf">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.1389em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathbf">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathbf">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mord">.</span></span></span></span></span></p>
+<p>This is another affine transformation. Adding layers without nonlinear activations does not create nonlinear functions of the original inputs. With an activation between layers, that simplification generally fails.</p>
+<p>This bridge helps separate two ideas: having many parameters and having a genuinely different function class. Neither automatically establishes better prediction; the next module's evaluation principles still apply.</p></section><section class="lesson-section" id="lesson-4"><h2><span class="chapter-number">4.4</span> Encode categories and fit the pipeline</h2><p>A categorical predictor must be represented numerically without imposing an arbitrary quantitative spacing. With an intercept and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi></mrow><annotation encoding="application/x-tex">K</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span></span></span></span> categories, reference coding uses <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">K-1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.0715em;">K</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> indicator columns. The omitted category is the reference.</p>
+<p>For smoking status, let <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">S=1</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">1</span></span></span></span> for smokers and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">S=0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.6444em;"></span><span class="mord">0</span></span></span></span> otherwise. An additive model is</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mtext>charges</mtext><mo stretchy="true">^</mo></mover><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><msub><mi>b</mi><mn>1</mn></msub><mtext>age</mtext><mo>+</mo><msub><mi>b</mi><mn>2</mn></msub><mtext>BMI</mtext><mo>+</mo><msub><mi>b</mi><mn>3</mn></msub><mtext>children</mtext><mo>+</mo><msub><mi>b</mi><mn>4</mn></msub><mi>S</mi><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\widehat{\text{charges}}=b_0+b_1\text{age}+b_2\text{BMI}+b_3\text{children}+b_4S.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.1289em;vertical-align:-0.1944em;"></span><span class="mord katex-accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.9344em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord text"><span class="mord">charges</span></span></span><span class="svg-align" style="top:-3.6944em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord text"><span class="mord">age</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord text"><span class="mord">BMI</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">3</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord text"><span class="mord">children</span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.0576em;">S</span><span class="mord">.</span></span></span></span></span></p>
+<p>Here, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">b_4</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">4</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> is the fitted smoker–nonsmoker difference at the same values of the other predictors. Including all category indicators <strong>and</strong> an intercept creates an exact dependence because the indicators sum to the intercept column.</p>
+<p>The original pipeline uses one-hot encoding and linear regression. Inspect the actual transformed column names before attaching interpretations to coefficients. Changing the reference category changes coefficient labels and values but not the represented fitted relationships when the model is otherwise equivalent.</p>
+<h3>Reference coding is a comparison system</h3>
+<p>For a three-level predictor with reference A, create indicators <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">I_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>I</mi><mi>C</mi></msub></mrow><annotation encoding="application/x-tex">I_C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>:</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mover accent="true"><mi>y</mi><mo stretchy="true">^</mo></mover><mo>=</mo><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><msub><mi>b</mi><mi>B</mi></msub><msub><mi>I</mi><mi>B</mi></msub><mo>+</mo><msub><mi>b</mi><mi>C</mi></msub><msub><mi>I</mi><mi>C</mi></msub><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\widehat y=b_0+b_BI_B+b_CI_C.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.865em;vertical-align:-0.1944em;"></span><span class="mord katex-accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6706em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.0359em;">y</span></span><span class="svg-align" style="width:calc(100% - 0.1111em);margin-left:0.1111em;top:-3.4306em;"><span class="pstrut" style="height:3em;"></span><span style="height:0.24em;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="0.24em" viewBox="0 0 1062 239" preserveAspectRatio="none"><path d="M529 0h5l519 115c5 1 9 5 9 10 0 1-1 2-1 3l-4 22
+c-1 5-5 9-11 9h-2L532 67 19 159h-2c-5 0-9-4-11-9l-5-22c-1-6 2-12 8-13z"/></svg></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0785em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0785em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>The fitted levels are <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">b_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> for A, <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><msub><mi>b</mi><mi>B</mi></msub></mrow><annotation encoding="application/x-tex">b_0+b_B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> for B, and <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mn>0</mn></msub><mo>+</mo><msub><mi>b</mi><mi>C</mi></msub></mrow><annotation encoding="application/x-tex">b_0+b_C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span> for C. The B–C comparison is <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>B</mi></msub><mo>−</mo><msub><mi>b</mi><mi>C</mi></msub></mrow><annotation encoding="application/x-tex">b_B-b_C</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0502em;">B</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.8444em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">b</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.0715em;">C</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span>, not either coefficient by itself. With additional numerical predictors, these comparisons hold those predictors fixed.</p>
+<p>Changing the reference category changes the coordinate system for coefficients, not the underlying fitted means. Always inspect the encoder's category order; never infer the reference from the order in which groups happen to appear in a plot.</p><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>Cat predictors; Model Evaluation and Assumptions</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/categorical.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="categorical" data-cell="0"><details class="code-reveal"><summary>Show Python · Cell 1</summary><div class="cell-header"><span>Cell 1</span><button class="copy" data-copy="codegroup-15-0">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-0">import pandas as pd
+import numpy as np
+import plotly.express as px</code></pre></details></div><div class="notebook-cell" data-book="categorical" data-cell="1"><details class="code-reveal"><summary>Show Python · Cell 2</summary><div class="cell-header"><span>Cell 2</span><button class="copy" data-copy="codegroup-15-1">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-1">insurance = pd.read_csv(&quot;insurance.csv&quot;)
+
+insurance.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>age</th>
+      <th>sex</th>
+      <th>bmi</th>
+      <th>children</th>
+      <th>smoker</th>
+      <th>region</th>
+      <th>charges</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19</td>
+      <td>female</td>
+      <td>27.900</td>
+      <td>0</td>
+      <td>yes</td>
+      <td>southwest</td>
+      <td>16884.92400</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>18</td>
+      <td>male</td>
+      <td>33.770</td>
+      <td>1</td>
+      <td>no</td>
+      <td>southeast</td>
+      <td>1725.55230</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>28</td>
+      <td>male</td>
+      <td>33.000</td>
+      <td>3</td>
+      <td>no</td>
+      <td>southeast</td>
+      <td>4449.46200</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>33</td>
+      <td>male</td>
+      <td>22.705</td>
+      <td>0</td>
+      <td>no</td>
+      <td>northwest</td>
+      <td>21984.47061</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>32</td>
+      <td>male</td>
+      <td>28.880</td>
+      <td>0</td>
+      <td>no</td>
+      <td>northwest</td>
+      <td>3866.85520</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="2"><details class="code-reveal"><summary>Show Python · Cell 3</summary><div class="cell-header"><span>Cell 3</span><button class="copy" data-copy="codegroup-15-2">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-2">fig = px.scatter(
+    insurance,
+    x=&quot;bmi&quot;,
+    y=&quot;charges&quot;,
+    color=&quot;smoker&quot;,
+    trendline=&quot;ols&quot;,
+    opacity=0.65,
+    color_discrete_map={
+        &quot;no&quot;: &quot;#232D4B&quot;,
+        &quot;yes&quot;: &quot;#E57200&quot;
+    },
+    title=&quot;BMI Versus Insurance Charges by Smoking Status&quot;,
+    labels={
+        &quot;bmi&quot;: &quot;Body Mass Index (BMI)&quot;,
+        &quot;charges&quot;: &quot;Insurance Charges ($)&quot;,
+        &quot;smoker&quot;: &quot;Smoker&quot;
+    }
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/categorical-2-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="3"><details class="code-reveal"><summary>Show Python · Cell 4</summary><div class="cell-header"><span>Cell 4</span><button class="copy" data-copy="codegroup-15-3">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-3">y = insurance[&quot;charges&quot;]
+
+numeric_features = [
+    &quot;age&quot;,
+    &quot;bmi&quot;,
+    &quot;children&quot;
+]
+
+categorical_features = [
+    &quot;sex&quot;,
+    &quot;smoker&quot;,
+    &quot;region&quot;
+]
+
+X = insurance[
+    numeric_features + categorical_features
+]
+
+X.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>age</th>
+      <th>bmi</th>
+      <th>children</th>
+      <th>sex</th>
+      <th>smoker</th>
+      <th>region</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19</td>
+      <td>27.900</td>
+      <td>0</td>
+      <td>female</td>
+      <td>yes</td>
+      <td>southwest</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>18</td>
+      <td>33.770</td>
+      <td>1</td>
+      <td>male</td>
+      <td>no</td>
+      <td>southeast</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>28</td>
+      <td>33.000</td>
+      <td>3</td>
+      <td>male</td>
+      <td>no</td>
+      <td>southeast</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>33</td>
+      <td>22.705</td>
+      <td>0</td>
+      <td>male</td>
+      <td>no</td>
+      <td>northwest</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>32</td>
+      <td>28.880</td>
+      <td>0</td>
+      <td>male</td>
+      <td>no</td>
+      <td>northwest</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="4"><details class="code-reveal"><summary>Show Python · Cell 5</summary><div class="cell-header"><span>Cell 5</span><button class="copy" data-copy="codegroup-15-4">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-4">from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression</code></pre></details></div><div class="notebook-cell" data-book="categorical" data-cell="5"><details class="code-reveal"><summary>Show Python · Cell 6</summary><div class="cell-header"><span>Cell 6</span><button class="copy" data-copy="codegroup-15-5">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-5">preprocessor = ColumnTransformer(
+    transformers=[
+        (
+            &quot;numeric&quot;,
+            &quot;passthrough&quot;,
+            numeric_features
+        ),
+        (
+            &quot;categorical&quot;,
+            OneHotEncoder(
+                drop=&quot;first&quot;,
+                handle_unknown=&quot;ignore&quot;
+            ),
+            categorical_features
+        )
+    ],
+    verbose_feature_names_out=False
+)</code></pre></details></div><div class="notebook-cell" data-book="categorical" data-cell="6"><details class="code-reveal"><summary>Show Python · Cell 7</summary><div class="cell-header"><span>Cell 7</span><button class="copy" data-copy="codegroup-15-6">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-6">X_transformed = preprocessor.fit_transform(X)
+
+X_transformed = pd.DataFrame(
+    X_transformed,
+    columns=preprocessor.get_feature_names_out(),
+    index=X.index
+)
+
+X_transformed.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>age</th>
+      <th>bmi</th>
+      <th>children</th>
+      <th>sex_male</th>
+      <th>smoker_yes</th>
+      <th>region_northwest</th>
+      <th>region_southeast</th>
+      <th>region_southwest</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19.0</td>
+      <td>27.900</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>18.0</td>
+      <td>33.770</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>28.0</td>
+      <td>33.000</td>
+      <td>3.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>33.0</td>
+      <td>22.705</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>32.0</td>
+      <td>28.880</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="7"><details class="code-reveal"><summary>Show Python · Cell 8</summary><div class="cell-header"><span>Cell 8</span><button class="copy" data-copy="codegroup-15-7">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-7">ols_pipeline = Pipeline(
+    steps=[
+        (
+            &quot;preprocessing&quot;,
+            preprocessor
+        ),
+        (
+            &quot;model&quot;,
+            LinearRegression()
+        )
+    ]
+)
+
+ols_pipeline.fit(X, y)</code></pre></details></div><div class="notebook-cell" data-book="categorical" data-cell="8"><details class="code-reveal"><summary>Show Python · Cell 9</summary><div class="cell-header"><span>Cell 9</span><button class="copy" data-copy="codegroup-15-8">Copy cell</button></div><pre class="source-code"><code id="codegroup-15-8">y_hat = ols_pipeline.predict(X)</code></pre></details></div><p class="notebook-download"><a href="notebooks/categorical.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section><section class="lesson-section" id="lesson-5"><h2><span class="chapter-number">4.5</span> Diagnose residuals and interpret fit</h2><h3>Check residuals, not only a fit score</h3>
+<p>A residual plot should be examined for curvature, changing spread, unusual observations, and dependence. Curvature suggests that the mean function is missing structure. A fan shape suggests nonconstant variance. Time-ordered patterns can indicate dependence. A small training error does not invalidate these concerns.</p>
+<p>The classical linear-model assumptions separate different roles: an appropriate conditional mean, independent observations or a suitable dependence model, and constant variance for the usual homoscedastic standard errors. Normal errors support exact small-sample classical inference; normality is not required to calculate OLS.</p>
+<h3>Explained variation</h3>
+<p>For an in-sample model with an intercept, define</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">SST</mi><mo>⁡</mo><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false">(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>y</mi><mo stretchy="true">‾</mo></mover><msup><mo stretchy="false">)</mo><mn>2</mn></msup><mo separator="true">,</mo><mspace width="2em"/><msup><mi>R</mi><mn>2</mn></msup><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mi mathvariant="normal">SSE</mi><mo>⁡</mo><mi mathvariant="normal">SST</mi><mo>⁡</mo></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">\operatorname{SST}=\sum_i(y_i-\overline y)^2,\qquad R^2=1-\frac{\operatorname{SSE}}{\operatorname{SST}}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.6833em;"></span><span class="mop"><span class="mord mathrm">SST</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.3277em;vertical-align:-1.2777em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.05em;"><span style="top:-1.8723em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span><span style="top:-3.05em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.2777em;"><span></span></span></span></span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">i</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord katex-overline"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6306em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0359em;">y</span></span></span><span style="top:-3.5506em;"><span class="pstrut" style="height:3em;"></span><span class="overline-line" style="border-bottom-width:0.04em;"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="mclose"><span class="mclose">)</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mord mathrm">SST</span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mord mathrm">SSE</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span></p>
+<p><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">R^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> measures reduction in squared error relative to predicting the training mean. It is not the percentage of predictions that are correct and does not establish causality.</p>
+<p>With <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi></mrow><annotation encoding="application/x-tex">p</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span></span></span></span> predictor columns excluding the intercept,</p>
+<p><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msubsup><mi>R</mi><mrow><mi mathvariant="normal">a</mi><mi mathvariant="normal">d</mi><mi mathvariant="normal">j</mi></mrow><mn>2</mn></msubsup><mo>=</mo><mn>1</mn><mo>−</mo><mfrac><mrow><mi mathvariant="normal">SSE</mi><mo>⁡</mo><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mi>p</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow><mrow><mi mathvariant="normal">SST</mi><mo>⁡</mo><mi mathvariant="normal">/</mi><mo stretchy="false">(</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></mfrac><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">R^2_{\mathrm{adj}}=1-\frac{\operatorname{SSE}/(n-p-1)}{\operatorname{SST}/(n-1)}.</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:1.2472em;vertical-align:-0.3831em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-2.453em;margin-left:-0.0077em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">adj</span></span></span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.3831em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="katex-base"><span class="katex-strut" style="height:2.363em;vertical-align:-0.936em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mord mathrm">SST</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">/</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop"><span class="mord mathrm">SSE</span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">/</span><span class="mopen">(</span><span class="mord mathnormal">n</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal">p</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord">1</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.936em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mord">.</span></span></span></span></span></p>
+<p>Adding columns to a nested OLS model cannot increase its minimum training SSE, so training <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">R^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> cannot decrease. Adjusted <span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>R</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">R^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="katex-base"><span class="katex-strut" style="height:0.8141em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0077em;">R</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8141em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="katex-sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span></span> can fall because it accounts for added parameters. Count the <strong>encoded columns</strong>, including separate indicators. Neither score replaces evaluation on new data.</p>
+<h3>Separate fitting assumptions from inference assumptions</h3>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>What is needed?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Can least squares compute fitted values?</td>
+<td>A numerical design and response; rank affects uniqueness of coefficients.</td>
+</tr>
+<tr>
+<td>Can coefficients describe the chosen conditional mean?</td>
+<td>An appropriate mean specification and relevant comparisons.</td>
+</tr>
+<tr>
+<td>Are conventional homoscedastic standard errors appropriate?</td>
+<td>A suitable independent, constant-variance error model.</td>
+</tr>
+<tr>
+<td>Can the fit be interpreted causally?</td>
+<td>Additional design and identification assumptions.</td>
+</tr>
+<tr>
+<td>Will predictions generalize?</td>
+<td>Evaluation on cases representative of the intended use.</td>
+</tr>
+</tbody>
+</table>
+<p>A large residual is not identical to an influential observation. Influence also depends on the predictor configuration: a point far from the rest of the design can pull a fitted model strongly. Investigate such observations rather than automatically deleting them.</p>
+<p><strong>Book connection:</strong> Molnar emphasizes explaining individual terms and category comparisons. Practical Statistics links this interpretation to diagnostics. Use both perspectives before turning an estimated coefficient into a substantive claim.</p><div class="application"><div class="application-head"><div><span class="eyebrow">APPLY THE NOTES</span><h3>Cat predictors; Model Evaluation and Assumptions</h3></div><a class="button" href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/notebooks/categorical.ipynb" target="_blank" rel="noopener noreferrer">Run in Colab</a></div><p class="cell-guide">Saved outputs are visible below. Reveal the original Python when you want to inspect it; full notebooks run in Colab.</p><div class="notebook-cell" data-book="categorical" data-cell="9"><details class="code-reveal"><summary>Show Python · Cell 10</summary><div class="cell-header"><span>Cell 10</span><button class="copy" data-copy="codegroup-16-9">Copy cell</button></div><pre class="source-code"><code id="codegroup-16-9">model_results = X.copy()
+
+model_results[&quot;observed_charges&quot;] = y
+
+model_results[&quot;predicted_charges&quot;] = y_hat
+
+model_results[&quot;residual&quot;] = (
+    model_results[&quot;observed_charges&quot;]
+    -
+    model_results[&quot;predicted_charges&quot;]
+)
+
+model_results.head()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>age</th>
+      <th>bmi</th>
+      <th>children</th>
+      <th>sex</th>
+      <th>smoker</th>
+      <th>region</th>
+      <th>observed_charges</th>
+      <th>predicted_charges</th>
+      <th>residual</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>19</td>
+      <td>27.900</td>
+      <td>0</td>
+      <td>female</td>
+      <td>yes</td>
+      <td>southwest</td>
+      <td>16884.92400</td>
+      <td>25293.713028</td>
+      <td>-8408.789028</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>18</td>
+      <td>33.770</td>
+      <td>1</td>
+      <td>male</td>
+      <td>no</td>
+      <td>southeast</td>
+      <td>1725.55230</td>
+      <td>3448.602834</td>
+      <td>-1723.050534</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>28</td>
+      <td>33.000</td>
+      <td>3</td>
+      <td>male</td>
+      <td>no</td>
+      <td>southeast</td>
+      <td>4449.46200</td>
+      <td>6706.988491</td>
+      <td>-2257.526491</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>33</td>
+      <td>22.705</td>
+      <td>0</td>
+      <td>male</td>
+      <td>no</td>
+      <td>northwest</td>
+      <td>21984.47061</td>
+      <td>3754.830163</td>
+      <td>18229.640447</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>32</td>
+      <td>28.880</td>
+      <td>0</td>
+      <td>male</td>
+      <td>no</td>
+      <td>northwest</td>
+      <td>3866.85520</td>
+      <td>5592.493386</td>
+      <td>-1725.638186</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="10"><details class="code-reveal"><summary>Show Python · Cell 11</summary><div class="cell-header"><span>Cell 11</span><button class="copy" data-copy="codegroup-16-10">Copy cell</button></div><pre class="source-code"><code id="codegroup-16-10">fig = px.scatter(
+    model_results,
+    x=&quot;predicted_charges&quot;,
+    y=&quot;residual&quot;,
+    color=&quot;smoker&quot;,
+    opacity=0.65,
+    title=&quot;Residuals Versus Predicted Insurance Charges&quot;,
+    labels={
+        &quot;predicted_charges&quot;: &quot;Predicted Charges ($)&quot;,
+        &quot;residual&quot;: &quot;Residual: Observed − Predicted ($)&quot;,
+        &quot;smoker&quot;: &quot;Smoker&quot;
+    },
+    color_discrete_map={
+        &quot;no&quot;: &quot;#232D4B&quot;,
+        &quot;yes&quot;: &quot;#E57200&quot;
+    }
+)
+
+fig.add_hline(
+    y=0,
+    line_dash=&quot;dash&quot;,
+    line_color=&quot;black&quot;
+)
+
+fig.show()</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><div class="notebook-plot" data-plot-url="notebook-outputs/categorical-10-0.json" role="region" aria-label="Saved notebook plot"><p>Loading saved chart…</p></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="11"><details class="code-reveal"><summary>Show Python · Cell 12</summary><div class="cell-header"><span>Cell 12</span><button class="copy" data-copy="codegroup-16-11">Copy cell</button></div><pre class="source-code"><code id="codegroup-16-11">feature_names = (
+    ols_pipeline
+    .named_steps[&quot;preprocessing&quot;]
+    .get_feature_names_out()
+)
+</code></pre></details></div><div class="notebook-cell" data-book="categorical" data-cell="12"><details class="code-reveal"><summary>Show Python · Cell 13</summary><div class="cell-header"><span>Cell 13</span><button class="copy" data-copy="codegroup-16-12">Copy cell</button></div><pre class="source-code"><code id="codegroup-16-12">coefficient_table = pd.DataFrame({
+    &quot;predictor&quot;: feature_names,
+    &quot;coefficient&quot;: (
+        ols_pipeline
+        .named_steps[&quot;model&quot;]
+        .coef_
+    )
+})
+
+intercept = (
+    ols_pipeline
+    .named_steps[&quot;model&quot;]
+    .intercept_
+)
+
+print(f&quot;Intercept: ${intercept:,.2f}&quot;)
+
+coefficient_table</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><pre class="notebook-text">Intercept: $-11,938.54
+</pre><div class="table-wrap notebook-table"><table>
+  <thead>
+    <tr>
+      <th></th>
+      <th>predictor</th>
+      <th>coefficient</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>age</td>
+      <td>256.856353</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>bmi</td>
+      <td>339.193454</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>children</td>
+      <td>475.500545</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>sex_male</td>
+      <td>-131.314359</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>smoker_yes</td>
+      <td>23848.534542</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>region_northwest</td>
+      <td>-352.963899</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>region_southeast</td>
+      <td>-1035.022049</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>region_southwest</td>
+      <td>-960.050991</td>
+    </tr>
+  </tbody>
+</table></div></div></div><div class="notebook-cell" data-book="categorical" data-cell="13"><details class="code-reveal"><summary>Show Python · Cell 14</summary><div class="cell-header"><span>Cell 14</span><button class="copy" data-copy="codegroup-16-13">Copy cell</button></div><pre class="source-code"><code id="codegroup-16-13">from sklearn.metrics import r2_score</code></pre></details></div><div class="notebook-cell" data-book="categorical" data-cell="14"><details class="code-reveal"><summary>Show Python · Cell 15</summary><div class="cell-header"><span>Cell 15</span><button class="copy" data-copy="codegroup-16-14">Copy cell</button></div><pre class="source-code"><code id="codegroup-16-14">r_squared = r2_score(
+    y,
+    y_hat
+)
+
+n = len(y)
+
+p = len(feature_names)
+
+adjusted_r_squared = (
+    1
+    -
+    (1 - r_squared)
+    *
+    (n - 1)
+    /
+    (n - p - 1)
+)
+
+print(f&quot;R²:          {r_squared:.3f}&quot;)
+print(f&quot;Adjusted R²: {adjusted_r_squared:.3f}&quot;)
+print(f&quot;Number of observations: {n}&quot;)
+print(f&quot;Number of predictors after encoding: {p}&quot;)</code></pre></details><div class="cell-output"><div class="output-label">SAVED NOTEBOOK OUTPUT</div><pre class="notebook-text">R²:          0.751
+Adjusted R²: 0.749
+Number of observations: 1338
+Number of predictors after encoding: 8
+</pre></div></div><p class="notebook-download"><a href="notebooks/categorical.ipynb" download>Download this notebook</a> · <a href="datasets/">Get the datasets</a></p></div></section></article><section id="illustration"><div class="section-heading"><h2>How stable is a coefficient?</h2><span>Additional website illustration</span></div><p>Insurance charges modeled with age, BMI, and children, using all 1,338 observations. These are the numerical-predictor models from the start of the module. The illustration uses 500 row-bootstrap refits; no train/test split is used.</p><div class="controls"><label>Coefficient <select id="coef-select"><option value="1">BMI</option><option value="0">Age</option><option value="2">Children</option></select></label></div><div id="coef-metrics" class="metrics" aria-live="polite"></div><div id="coef-plot" class="plot" role="img" aria-label="Interactive data visualization"></div><p class="caption">Percentile bootstrap intervals quantify sampling uncertainty under the resampling assumptions. They do not establish causation or repair omitted predictors.</p></section><section id="code"><details class="supplement"><summary>Extra practice: additional website notebook</summary><div class="section-heading"><h2>Try it in Python</h2><button class="copy" data-copy="code-4">Copy code</button></div><p>These additional examples are separate from the original class code embedded above. Download the notebook and get its CSV from the datasets folder.</p><div class="actions"><a class="button" href="examples/module-4.ipynb">Download example notebook</a><a class="button" href="examples/module-4.py">Download Python script</a></div><pre><code id="code-4">import pandas as pd
+import numpy as np
+import plotly.express as px
+from sklearn.linear_model import LinearRegression
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.pipeline import make_pipeline
+
+# Upload insurance.csv. Begin with the numerical-predictor model.
+insurance = pd.read_csv(&quot;insurance.csv&quot;)
+X = insurance[[&quot;age&quot;, &quot;bmi&quot;, &quot;children&quot;]]
+y = insurance[&quot;charges&quot;]
+model = LinearRegression().fit(X, y)
+print(pd.Series(model.coef_, index=X.columns))
+
+rng = np.random.default_rng(123)
+coefficients = []
+for i in range(500):
+    rows = rng.choice(len(insurance), size=len(insurance), replace=True)
+    bootstrap_model = LinearRegression().fit(X.iloc[rows], y.iloc[rows])
+    coefficients.append(bootstrap_model.coef_)
+
+bootstrap = pd.DataFrame(coefficients, columns=X.columns)
+print(&quot;Bootstrap standard errors:&quot;)
+print(bootstrap.std())
+print(&quot;Percentile 95% confidence intervals:&quot;)
+print(bootstrap.quantile([0.025, 0.975]))
+px.histogram(bootstrap, x=&quot;bmi&quot;, nbins=30,
+             title=&quot;Bootstrap BMI coefficients&quot;).show()
+
+# Extend to categorical predictors; retain all observations for this lesson.
+numeric = [&quot;age&quot;, &quot;bmi&quot;, &quot;children&quot;]
+categorical = [&quot;sex&quot;, &quot;smoker&quot;, &quot;region&quot;]
+X_full = insurance[numeric + categorical]
+preprocessor = ColumnTransformer([
+    (&quot;numeric&quot;, &quot;passthrough&quot;, numeric),
+    (&quot;category&quot;, OneHotEncoder(drop=&quot;first&quot;, handle_unknown=&quot;ignore&quot;), categorical)
+])
+full_model = make_pipeline(preprocessor, LinearRegression()).fit(X_full, y)
+y_hat = full_model.predict(X_full)
+r2 = full_model.score(X_full, y)
+p = full_model.named_steps[&quot;columntransformer&quot;].transform(X_full).shape[1]
+adjusted_r2 = 1 - (1 - r2) * (len(y) - 1) / (len(y) - p - 1)
+print(&quot;Training R²:&quot;, r2, &quot;Adjusted R²:&quot;, adjusted_r2)
+fig = px.scatter(x=y_hat, y=y - y_hat,
+                 labels={&quot;x&quot;: &quot;Fitted charges&quot;, &quot;y&quot;: &quot;Residual&quot;})
+fig.add_hline(y=0, line_dash=&quot;dash&quot;)
+fig.show()
+# These fit statistics do not measure prediction performance on new patients.
+</code></pre></details></section><section class="live-python textbook" id="run-python"><div class="eyebrow">TRY IT IN THE BOOK</div><h2>Run Python here</h2><p>Remove one predictor. Explain how the remaining coefficients and residuals change.</p><p class="caption">The default result is shown below. Run it again, or reveal and edit the code. Python runs on your device; the first run downloads the runtime and packages. Edits and new results are not saved. The full class notebooks remain available in Colab.</p><details class="code-reveal"><summary>Show or edit Python</summary><label class="sr-only" for="live-editor-4">Editable Python example for module 4</label><textarea id="live-editor-4" spellcheck="false" autocapitalize="off" autocomplete="off">import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+
+insurance = pd.read_csv(&quot;insurance.csv&quot;)
+predictors = [&quot;age&quot;, &quot;bmi&quot;, &quot;children&quot;]  # Try removing one predictor.
+X = insurance[predictors]
+y = insurance[&quot;charges&quot;]
+model = LinearRegression().fit(X, y)
+predicted = model.predict(X)
+print(f&quot;Intercept: {model.intercept_:.3f}&quot;)
+print(pd.Series(model.coef_, index=predictors, name=&quot;Coefficient&quot;).round(3).to_string())
+r2 = model.score(X, y)
+n, p = X.shape
+adjusted = 1 - (1 - r2) * (n - 1) / (n - p - 1)
+print(f&quot;Training R-squared: {r2:.4f}; adjusted: {adjusted:.4f}&quot;)
+plt.figure(figsize=(8, 4))
+plt.scatter(predicted, y - predicted, alpha=0.4, color=&quot;#276582&quot;)
+plt.axhline(0, color=&quot;#cf591d&quot;)
+plt.xlabel(&quot;Predicted charges&quot;)
+plt.ylabel(&quot;Observed - predicted charges&quot;)
+plt.title(&quot;Residual structure remains despite multiple predictors&quot;)
+plt.tight_layout()
+plt.show()
+</textarea></details><div class="actions"><button class="button primary" data-run-python>Run Python</button><button class="button" data-stop-python disabled>Stop</button><button class="button" data-reset-python>Reset code</button><a class="button" href="live/module-4.py" download>Download script</a></div><p role="status" aria-live="polite">Ready. The output below was saved from the default example.</p><div class="live-output"><div class="output-label">DEFAULT EXAMPLE OUTPUT</div><pre class="notebook-text">Intercept: -6916.243
+age         239.994
+bmi         332.083
+children    542.865
+Training R-squared: 0.1201; adjusted: 0.1181
+</pre><img class="notebook-image" src="live/module-4-0.png" alt="Default plot for module 4 Python exercise" loading="lazy"></div></section><section id="readings" class="textbook"><h2>Suggested readings & reading questions</h2><table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Reading</th>
+<th>Focus question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Start here</td>
+<td><a href="https://www.statlearning.com/">ISL with Python, Chapter 3</a>: multiple regression, qualitative predictors, and model problems; Chapter 5 for bootstrap review</td>
+<td>Why can a partial coefficient differ from a marginal comparison?</td>
+</tr>
+<tr>
+<td>Interpretation</td>
+<td><a href="https://christophm.github.io/interpretable-ml-book/limo.html">Molnar: Linear Regression</a>, especially coefficient interpretation and categorical encoding</td>
+<td>What comparison does each design column represent?</td>
+</tr>
+<tr>
+<td>Applied diagnostics</td>
+<td><a href="https://www.oreilly.com/library/view/practical-statistics-for/9781492072935/ch04.html">Practical Statistics, 2e, Chapter 4</a>: factor variables, correlated predictors, and diagnostics</td>
+<td>Which conclusion changes when residual spread is not constant?</td>
+</tr>
+<tr>
+<td>Deeper theory</td>
+<td><a href="https://hastie.su.domains/ElemStatLearn/">ESL, 2e, Chapters 3 and 8</a>: regression and model inference</td>
+<td>How does bootstrap uncertainty relate to the sampling behavior of coefficients?</td>
+</tr>
+</tbody>
+</table>
+<p><strong>After reading:</strong> Write the encoded design for a three-level category and explain why all three indicators plus an intercept are dependent. Give one example of stable predictions with unstable coefficients. For the neural-network bridge, ISL Chapter 10 and ESL Chapter 11 are optional previews.</p></section><div class="check"><div class="eyebrow">CHECK YOUR UNDERSTANDING</div><h3>Why does dropping one one-hot column help when the model includes an intercept?</h3><details><summary>Reveal explanation</summary><p>The full set of category indicators sums to the intercept column. Removing one category avoids that exact linear dependence and defines the reference group. Other sources of multicollinearity can still remain.</p></details></div><section id="practice" class="textbook optional-practice"><h2>Optional practice questions</h2><p>Want more practice? Try these questions after reading the chapter. They are for self-study; work through your reasoning before revealing an answer.</p><details class="practice-reveal"><summary>Reveal 5 practice questions</summary><ol class="practice-list"><li><h3>Interpret a reference category</h3><p>A model includes an intercept and three indicators for a region variable with four categories. What does the omitted category represent? If you change the reference category, should the OLS predictions change?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>The omitted category is the reference: all three indicators are zero for its observations. With other predictors held fixed, each region coefficient compares that region with the reference. Reparameterizing the same model with a different reference changes coefficient interpretations but preserves fitted values, apart from numerical rounding.</p></details></li><li><h3>Compare fit measures</h3><p>After adding a predictor, training R² rises slightly but adjusted R² falls. Is that contradictory? Does either result establish better prediction on new observations?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>There is no contradiction. For nested unconstrained OLS models with an intercept fitted on the same rows, training R² cannot decrease. Adjusted R² penalizes additional predictors and can fall when the gain is small. Neither is a substitute for an appropriate out-of-sample evaluation.</p></details></li><li><h3>Read a residual fan</h3><p>Residuals versus fitted values show approximately zero average residual but a much wider spread at large fitted values. Which feature of the model needs attention, and what might happen to an interval method that assumes constant error variance?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>The pattern suggests nonconstant conditional error variance, or heteroskedasticity. The mean function may still be useful, but an interval procedure assuming constant variance can have poor conditional coverage: intervals may be too narrow where noise is larger and too wide where it is smaller. Investigate the pattern before choosing an uncertainty method.</p></details></li><li><h3>Connect regression and a neuron</h3><p>A hidden layer forms z = Wx + b, and an output layer takes a linear combination of z. If there is no nonlinear activation between them, what kind of function of x is the result? Why add an activation such as ReLU?</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>Composing affine transformations yields another affine transformation of x. Stacking such layers alone does not create a nonlinear response surface. ReLU, max(0, z), introduces nonlinearity so hidden units can combine to represent more flexible relationships. Flexibility still needs data and appropriate evaluation.</p></details></li><li><h3>Interpret a partial association</h3><p>In a medical-charge model containing age, BMI, and smoking indicators, the BMI coefficient is positive. Explain what 'holding the other predictors fixed' means. Give one reason this coefficient need not be the causal effect of changing BMI.</p><details class="practice-answer"><summary>Reveal suggested answer</summary><p>It compares fitted mean charges for people differing by one BMI unit while the included age and smoking variables are kept the same. Unmeasured health or behavioral factors may affect both BMI and charges; observational adjustment for the included predictors does not remove all possible confounding. An additive coefficient also assumes the same BMI slope across the represented groups.</p></details></li></ol></details></section><div class="page-turn"><a class="" href="module-3.html">Previous module</a><a class="" href="module-5.html">Next module</a></div><footer>DS 6021 · Prince Afriyie <span>Use Canvas for current announcements, deadlines, and submissions.</span></footer></main></body></html>
