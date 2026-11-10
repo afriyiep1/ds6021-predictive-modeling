@@ -9,7 +9,7 @@ if (courseNav && !courseNav.querySelector('a[href$="kmeans/"]')) {
   const link = document.createElement('a');
   link.className = 'navlink';
   link.href = new URL('kmeans/', document.currentScript.src).href;
-  link.textContent = 'KMeans weather lab';
+  link.textContent = 'Weather learning lab';
   courseNav.insertBefore(heading, resourcesHeading || null);
   courseNav.insertBefore(link, resourcesHeading || null);
 }

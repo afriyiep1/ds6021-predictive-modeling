@@ -37,10 +37,27 @@
     });
     return { rows: clean, points, original, means, scales, deviations, unique,
       dropped: rows.length - clean.length, constantFeatures: features.filter((_, j) => deviations[j] === 0),
-      inverse: center => center.map((value, j) => standardize ? value * scales[j] + means[j] : value) };
+      inverse: center => center.map((value, j) => standardize ? value * scales[j] + means[j] : value),
+      transform: center => center.map((value, j) => standardize ? (value - means[j]) / scales[j] : value) };
   }
 
-  function initialize(points, unique, k, seed, method) {
+  function randomCenters(bounds, k, seed) {
+    if (!Array.isArray(bounds) || !bounds.length || bounds.some(range => !Array.isArray(range) || range.length !== 2 || !range.every(Number.isFinite) || range[0] > range[1])) throw new Error('Every feature needs finite ordered bounds for random centers.');
+    if (!Number.isInteger(k) || k < 1) throw new Error('Choose a positive integer number of centers.');
+    if (k > 1 && bounds.every(range => range[0] === range[1])) throw new Error('These feature ranges contain only one distinct position.');
+    const random = randomGenerator(seed);
+    const centers = [];
+    const seen = new Set();
+    for (let attempts = 0; centers.length < k && attempts < 1000; attempts++) {
+      const center = bounds.map(([low, high]) => low + random() * (high - low));
+      const key = JSON.stringify(center);
+      if (!seen.has(key)) { centers.push(center); seen.add(key); }
+    }
+    if (centers.length !== k) throw new Error('The visible feature ranges cannot supply enough distinct centers.');
+    return centers;
+  }
+
+  function initialize(points, unique, k, seed, method, bounds = null) {
     if (!Number.isInteger(k) || k < 1 || k > unique.length) throw new Error(`Choose K between 1 and ${unique.length} distinct weather profiles.`);
     const random = randomGenerator(seed);
     if (method === 'random') {
@@ -51,6 +68,11 @@
       }
       return indices.slice(0, k).map(i => points[i].slice());
     }
+    if (method === 'random-space') {
+      const ranges = bounds || points[0].map((_, j) => [Math.min(...points.map(point => point[j])), Math.max(...points.map(point => point[j]))]);
+      return randomCenters(ranges, k, seed);
+    }
+    if (method !== 'kmeans++') throw new Error('Choose random profiles, random positions, or KMeans++ initialization.');
     // Standard k-means++ samples observations with probability proportional to D².
     const centers = [points[Math.floor(random() * points.length)].slice()];
     while (centers.length < k) {
@@ -107,5 +129,5 @@
     }
     return frames;
   }
-  return { distance2, randomGenerator, prepare, initialize, assign, objective, history };
+  return { distance2, randomGenerator, prepare, initialize, randomCenters, assign, objective, history };
 });

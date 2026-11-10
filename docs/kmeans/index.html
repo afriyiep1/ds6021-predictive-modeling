@@ -3,22 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Watch KMeans assign weather hours to clusters and move centroids. An interactive 2D and 3D DS 6021 teaching dashboard for Charlottesville weather.">
-  <title>KMeans Weather Lab · DS 6021</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="description" content="Explore KMeans, KNN classification, and multinomial logistic regression using Charlottesville weather. Place centroids, compare decision regions, and inspect held-out errors in 2D and 3D.">
+  <title>Weather Learning Lab · DS 6021</title>
+  <link rel="stylesheet" href="styles.css?v=20261110b">
+  <link rel="stylesheet" href="centroid-controls.css?v=20261110b">
+  <link rel="stylesheet" href="supervised.css?v=20261110b">
   <script defer src="../vendor/plotly.min.js"></script>
-  <script defer src="kmeans.js"></script>
-  <script defer src="app.js"></script>
+  <script defer src="kmeans.js?v=20261110b"></script>
+  <script defer src="app.js?v=20261110b"></script>
+  <script defer src="supervised-core.js?v=20261110b"></script>
+  <script defer src="supervised.js?v=20261110b"></script>
+  <script defer src="learning-tabs.js?v=20261110b"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to the dashboard</a>
   <header class="site-header"><a class="brand" href="../index.html"><b>DS 6021</b><span>Introduction to Predictive Modeling</span></a><a class="back-link" href="../index.html">← Course book</a></header>
   <main id="main">
     <section class="intro" aria-labelledby="page-title">
-      <div class="eyebrow">UNSUPERVISED LEARNING / CHARLOTTESVILLE WEATHER</div>
-      <h1 id="page-title">How KMeans converges<span>.</span></h1>
-      <p class="lede">One point is one weather hour. Assign it to the nearest center, move each center to its group’s mean, and watch the squared distances shrink.</p>
-      <div class="downloads"><a href="downloads/KMeans_Weather_Notes.pdf">Lecture PDF</a><a href="downloads/KMeans_Weather_Notes.tex">LaTeX source</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/KMeans_Weather_Colab.ipynb" target="_blank" rel="noopener">Open in Colab ↗</a><a href="downloads/KMeans_Weather_Colab.ipynb" download>Notebook</a></div>
+      <div class="eyebrow">CLUSTERING &amp; CLASSIFICATION / CHARLOTTESVILLE WEATHER</div>
+      <h1 id="page-title">One dataset. Three ways to learn<span>.</span></h1>
+      <p class="lede">One point is one weather hour. Discover groups with KMeans, then use labeled weather conditions to explore KNN and multinomial logistic regression.</p>
+      <div class="downloads"><a href="downloads/KMeans_Weather_Notes.pdf">KMeans lecture PDF</a><a href="downloads/KMeans_Weather_Notes.tex">LaTeX source</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/KMeans_Weather_Colab.ipynb" target="_blank" rel="noopener">KMeans in Colab ↗</a><a href="downloads/KMeans_Weather_Colab.ipynb" download>Notebook</a></div>
     </section>
 
     <section class="data-strip" aria-label="Weather dataset">
@@ -27,16 +32,27 @@
     </section>
     <div id="message" class="message" role="status" hidden></div>
 
+    <div class="learning-tabs" role="tablist" aria-label="Learning method">
+      <button id="tab-kmeans" class="learning-tab" type="button" role="tab" aria-selected="true" aria-controls="kmeans-panel" data-learning-mode="kmeans"><span class="tab-kind">UNSUPERVISED</span><strong>KMeans</strong><span>Discover similar hours</span></button>
+      <button id="tab-knn" class="learning-tab" type="button" role="tab" aria-selected="false" aria-controls="knn-panel" tabindex="-1" data-learning-mode="knn"><span class="tab-kind">SUPERVISED</span><strong>KNN</strong><span>Learn from nearby hours</span></button>
+      <button id="tab-logit" class="learning-tab" type="button" role="tab" aria-selected="false" aria-controls="logit-panel" tabindex="-1" data-learning-mode="logit"><span class="tab-kind">SUPERVISED</span><strong>Multinomial logit</strong><span>Learn class probabilities</span></button>
+    </div>
+
+    <div id="kmeans-panel" class="learning-panel" role="tabpanel" aria-labelledby="tab-kmeans" tabindex="0">
+    <div class="learning-question"><strong>Which weather hours are similar?</strong><span>KMeans sees the selected measurements. You choose K; it finds the groups. Weather-condition labels are not used.</span></div>
+
     <section aria-labelledby="setup-heading" class="setup">
       <h2 id="setup-heading" class="section-label">1. Choose the geometry</h2>
       <div class="settings">
         <label class="setting wide">Fit dimensions<select id="dimensions" disabled><option value="2">2D · cloud cover + humidity</option><option value="3">3D · add precipitation</option></select></label>
         <label class="setting">Number of clusters, K<select id="clusters" disabled><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
-        <label class="setting">Starting centers<select id="initialization" disabled><option value="random">Random distinct profiles</option><option value="kmeans++">KMeans++</option></select></label>
+        <label class="setting">Starting centers<select id="initialization" disabled><option value="random">Random distinct profiles</option><option value="kmeans++">KMeans++</option><option value="random-space">Random positions in feature space</option><option value="manual">Place centers myself</option></select></label>
         <label class="setting seed">Random seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="6021" disabled></label>
         <label class="check-setting"><input id="standardize" type="checkbox" checked disabled><span>Standardize features<small>Mean 0 · standard deviation 1</small></span></label>
       </div>
       <p id="geometry-note" class="hint">Changing dimensions refits the model with those features. The plot uses the same coordinates as the distance calculation.</p>
+      <div class="centroid-actions"><button id="randomize-centers" class="button secondary" disabled>Randomize centers</button><span id="initialization-help" class="hint"></span></div>
+      <section id="manual-controls" class="manual-controls" aria-labelledby="manual-heading" hidden><div class="manual-heading"><h3 id="manual-heading">Place your starting centers</h3><output id="manual-count">0 centers placed</output></div><p id="manual-instructions"></p><div class="manual-toolbar"><label>Click to place or move<select id="manual-active-center"></select></label><button id="manual-clear" class="button secondary">Clear centers</button><button id="manual-start" class="button primary" disabled>Start from these centers</button></div><div id="manual-fields" class="manual-fields"></div><p id="manual-validation" class="hint" role="status"></p></section>
     </section>
 
     <section class="lab" aria-labelledby="lab-heading">
@@ -59,6 +75,10 @@
     <section class="profiles" aria-labelledby="profiles-heading"><div class="section-row"><h2 id="profiles-heading" class="section-label">3. Interpret the centers</h2><span class="run-label">Values shown in original weather units</span></div><p id="profile-explanation">A center becomes a cluster mean after an update. Group names are interpretations you make after fitting.</p><div class="table-wrap"><table><thead><tr><th scope="col">Cluster</th><th scope="col">Hours assigned</th><th scope="col">Cloud cover (%)</th><th scope="col">Humidity (%)</th><th id="rain-heading" scope="col" hidden>Precipitation (mm)</th></tr></thead><tbody id="profiles-body"></tbody></table></div><p class="hint">Cluster numbers are arbitrary identifiers. “Sunny,” “cloudy,” and “rainy” are not supplied to the algorithm. Low cloud cover at night does not mean sunshine.</p></section>
 
     <section class="teaching" aria-labelledby="try-heading"><div><h2 id="try-heading">Try this in class</h2><ol><li><strong>Predict the next move.</strong> Pause after assignment. Where should each centroid move?</li><li><strong>Explain the loss curve.</strong> Why can the assignment step and the mean update each avoid increasing SSE?</li><li><strong>Change the seed.</strong> Keep K and the features fixed. Does the final partition or SSE change?</li><li><strong>Add rain, then change scaling.</strong> What happens when precipitation joins the distance calculation? Which features dominate without standardization?</li><li><strong>Question K = 3.</strong> Compare several values. Are the groups useful, or are we dividing a continuum?</li></ol></div><div class="method-card"><h2>What is being minimized?</h2><p class="formula">SSE = Σ<sub>i</sub> ‖x<sub>i</sub> − μ<sub>assigned(i)</sub>‖²</p><p>Assignments change while the centers stay fixed. Then centers move to the coordinate-wise means while assignments stay fixed.</p><p>A stable run is not a guarantee of the best possible partition. The companion notebook uses multiple starts and keeps the smallest final inertia.</p><details><summary>Algorithm and data details</summary><p>This dashboard implements Lloyd’s algorithm with squared Euclidean distance. Exact distance ties go to the lowest-numbered cluster. An empty cluster retains its previous center; the interface flags it. A run stops when a reassignment changes no memberships, or after 100 mean updates.</p><p>Standardization uses the population standard deviation (ddof = 0), as in scikit-learn’s StandardScaler. A constant feature is mapped to zero. Random starts sample distinct profiles; KMeans++ uses standard D² sampling. The random generator and initialization procedure differ from scikit-learn, so identical seed numbers across implementations need not produce identical starts.</p><p>Hourly data are model-based estimates from the Open-Meteo Forecast API’s recent past. They are not independent station readings. Adjacent hours are related in time; these clusters describe the selected period and features, not validated meteorological classes.</p></details></div></section>
+
+    </div>
+    <div id="knn-panel" class="learning-panel" role="tabpanel" aria-labelledby="tab-knn" tabindex="0" hidden></div>
+    <div id="logit-panel" class="learning-panel" role="tabpanel" aria-labelledby="tab-logit" tabindex="0" hidden></div>
 
     <footer><div><strong>DS 6021 · Prince Afriyie</strong><span>University of Virginia · School of Data Science</span></div><p>Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">API documentation</a> · <a href="weather-snapshot.csv" download>Saved data</a> · <a href="https://github.com/afriyiep1/ds6021-predictive-modeling/tree/main/docs/kmeans" target="_blank" rel="noopener">Source on GitHub</a></p></footer>
   </main>
