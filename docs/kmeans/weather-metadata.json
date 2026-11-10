@@ -1,0 +1,53 @@
+{
+  "source": "Open-Meteo Forecast API",
+  "title": "Charlottesville weather: 60 recent completed UTC days",
+  "latitude": 38.0293,
+  "longitude": -78.4767,
+  "grid_latitude": 38.031494,
+  "grid_longitude": -78.465256,
+  "elevation_m": 151.0,
+  "retrieved_at": "2026-11-10T14:44:57Z",
+  "timezone": "America/New_York",
+  "timestamp_timezone": "UTC",
+  "endpoint": "https://api.open-meteo.com/v1/forecast?latitude=38.0293&longitude=-78.4767&hourly=temperature_2m,relative_humidity_2m,precipitation,cloud_cover,weather_code&timezone=UTC&timeformat=unixtime&past_days=60&forecast_days=0",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "kind": "recent-model-estimates",
+  "date_range_utc": {
+    "start": "2026-09-11T00:00:00Z",
+    "end": "2026-11-09T23:00:00Z"
+  },
+  "past_days": 60,
+  "n_rows": 1440,
+  "missing_value_count": 0,
+  "attribution": "Weather data by Open-Meteo.com. Hourly model estimates reformatted and clustered for teaching.",
+  "provider_url": "https://open-meteo.com/",
+  "docs_url": "https://open-meteo.com/en/docs",
+  "units": {
+    "time": "unixtime",
+    "temperature_2m": "\u00b0C",
+    "relative_humidity_2m": "%",
+    "precipitation": "mm",
+    "cloud_cover": "%",
+    "weather_code": "wmo code"
+  },
+  "features_2d": [
+    "cloud_cover",
+    "relative_humidity_2m"
+  ],
+  "features_3d": [
+    "cloud_cover",
+    "relative_humidity_2m",
+    "precipitation"
+  ],
+  "notes": [
+    "Rows are hourly model-based estimates at a Charlottesville-area grid point, not direct station observations.",
+    "Precipitation is total precipitation in the preceding hour, including rain, showers and snow water equivalent.",
+    "Forecast days=0 excludes future forecast days; data are the past 60 completed UTC days.",
+    "Weather code, temperature and timestamps are context only and excluded from default clustering.",
+    "Cluster numbers are arbitrary; K=3 is a teaching choice and does not establish true weather categories.",
+    "All hours are included, so use clear rather than sunny unless restricting to daytime.",
+    "Time is Unix seconds in UTC; display via America/New_York to handle the November DST transition.",
+    "Dynamic refresh changes the sampling window; the bundled raw JSON/CSV preserve this exact snapshot."
+  ]
+}

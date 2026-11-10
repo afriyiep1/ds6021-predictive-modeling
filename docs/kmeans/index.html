@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Watch KMeans assign weather hours to clusters and move centroids. An interactive 2D and 3D DS 6021 teaching dashboard for Charlottesville weather.">
+  <title>KMeans Weather Lab · DS 6021</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="../vendor/plotly.min.js"></script>
+  <script defer src="kmeans.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to the dashboard</a>
+  <header class="site-header"><a class="brand" href="../index.html"><b>DS 6021</b><span>Introduction to Predictive Modeling</span></a><a class="back-link" href="../index.html">← Course book</a></header>
+  <main id="main">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="eyebrow">UNSUPERVISED LEARNING / CHARLOTTESVILLE WEATHER</div>
+      <h1 id="page-title">How KMeans converges<span>.</span></h1>
+      <p class="lede">One point is one weather hour. Assign it to the nearest center, move each center to its group’s mean, and watch the squared distances shrink.</p>
+      <div class="downloads"><a href="downloads/KMeans_Weather_Notes.pdf">Lecture PDF</a><a href="downloads/KMeans_Weather_Notes.tex">LaTeX source</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/KMeans_Weather_Colab.ipynb" target="_blank" rel="noopener">Open in Colab ↗</a><a href="downloads/KMeans_Weather_Colab.ipynb" download>Notebook</a></div>
+    </section>
+
+    <section class="data-strip" aria-label="Weather dataset">
+      <div class="data-copy"><div class="data-title"><span id="data-badge" class="badge">LOADING SNAPSHOT</span><strong>Charlottesville, Virginia</strong></div><p id="data-description">Loading the saved weather hours…</p><p id="data-detail" class="small">Open-Meteo model estimates · timestamps displayed in America/New_York.</p></div>
+      <div class="data-actions"><button id="refresh" class="button secondary" disabled>Refresh past 60 days</button><button id="snapshot" class="button quiet" disabled>Use saved snapshot</button><button id="download" class="text-button" disabled>Download active data (CSV)</button></div>
+    </section>
+    <div id="message" class="message" role="status" hidden></div>
+
+    <section aria-labelledby="setup-heading" class="setup">
+      <h2 id="setup-heading" class="section-label">1. Choose the geometry</h2>
+      <div class="settings">
+        <label class="setting wide">Fit dimensions<select id="dimensions" disabled><option value="2">2D · cloud cover + humidity</option><option value="3">3D · add precipitation</option></select></label>
+        <label class="setting">Number of clusters, K<select id="clusters" disabled><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
+        <label class="setting">Starting centers<select id="initialization" disabled><option value="random">Random distinct profiles</option><option value="kmeans++">KMeans++</option></select></label>
+        <label class="setting seed">Random seed<input id="seed" type="number" min="0" max="4294967295" step="1" value="6021" disabled></label>
+        <label class="check-setting"><input id="standardize" type="checkbox" checked disabled><span>Standardize features<small>Mean 0 · standard deviation 1</small></span></label>
+      </div>
+      <p id="geometry-note" class="hint">Changing dimensions refits the model with those features. The plot uses the same coordinates as the distance calculation.</p>
+    </section>
+
+    <section class="lab" aria-labelledby="lab-heading">
+      <div class="section-row"><h2 id="lab-heading" class="section-label">2. Follow one run</h2><span id="run-settings-summary" class="run-label">One initialization · deterministic seed</span></div>
+      <div class="transport" aria-label="Animation controls">
+        <button id="reset" class="button secondary" disabled>↺ Reset</button><button id="back" class="button secondary" disabled>← Back</button><button id="step" class="button primary" disabled>Assign points →</button><button id="play" class="button secondary" disabled>▶ Play</button><button id="finish" class="button quiet" disabled>Run to convergence</button>
+        <label class="speed">Pace<select id="speed"><option value="1600">Slow</option><option value="850" selected>Normal</option><option value="350">Fast</option></select></label>
+      </div>
+      <div class="workspace">
+        <div class="plot-panel"><div class="plot-title"><h3 id="scatter-heading">Weather hours in feature space</h3><span id="plot-units">Standardized coordinates</span></div><div id="projection-controls" class="projection-controls" hidden><div class="projection-heading"><strong>Projected 3D view</strong><span>All three features are fitted. Rotation changes only the view.</span></div><label>Azimuth <output id="azimuth-value" for="azimuth">40°</output><input id="azimuth" type="range" min="0" max="360" step="1" value="40" aria-label="3D projection azimuth"></label><label>Elevation <output id="elevation-value" for="elevation">24°</output><input id="elevation" type="range" min="-75" max="75" step="1" value="24" aria-label="3D projection elevation"></label><p>Orthographic projection with one common coordinate scale. Overlapping points can separate as you rotate.</p></div><div id="scatter" class="scatter" role="img" aria-label="Weather points, current centroids, and their movement paths"></div><div class="legend-note"><span class="legend-point"></span>Weather hour <span class="legend-center">×</span>Centroid <span class="legend-line"></span>Centroid path <span class="plot-interaction" id="plot-interaction">Hover to inspect an hour · drag to zoom</span></div></div>
+        <aside class="progress-panel" aria-label="Algorithm progress">
+          <div class="stage-card"><div class="eyebrow" id="stage-tag">START HERE</div><h3 id="stage-title">Choose starting centers</h3><p id="stage-explanation">The data have no class labels. The colored crosses are the starting centers; gray points have not yet been assigned.</p><div id="stage-note" class="stage-note" hidden></div></div>
+          <div class="metric-row"><div><span>Total within-cluster SSE</span><strong id="sse">—</strong><small id="sse-change">Defined after the first assignment</small></div><div><span id="secondary-label">Assigned hours</span><strong id="secondary-value">0</strong><small id="secondary-detail">No assignments yet</small></div></div>
+          <div class="loss-panel"><h3>The objective never increases</h3><div id="loss" class="loss" role="img" aria-label="Within-cluster sum of squares over assignment and update stages"></div><p>Compare values within this run. Changing the features or scaling changes the objective’s units.</p></div>
+        </aside>
+      </div>
+      <div class="scrubber"><label for="timeline">Algorithm history</label><input type="range" id="timeline" value="0" min="0" max="0" step="1" disabled><output id="timeline-label" for="timeline">Initialization</output></div>
+    </section>
+
+    <section class="profiles" aria-labelledby="profiles-heading"><div class="section-row"><h2 id="profiles-heading" class="section-label">3. Interpret the centers</h2><span class="run-label">Values shown in original weather units</span></div><p id="profile-explanation">A center becomes a cluster mean after an update. Group names are interpretations you make after fitting.</p><div class="table-wrap"><table><thead><tr><th scope="col">Cluster</th><th scope="col">Hours assigned</th><th scope="col">Cloud cover (%)</th><th scope="col">Humidity (%)</th><th id="rain-heading" scope="col" hidden>Precipitation (mm)</th></tr></thead><tbody id="profiles-body"></tbody></table></div><p class="hint">Cluster numbers are arbitrary identifiers. “Sunny,” “cloudy,” and “rainy” are not supplied to the algorithm. Low cloud cover at night does not mean sunshine.</p></section>
+
+    <section class="teaching" aria-labelledby="try-heading"><div><h2 id="try-heading">Try this in class</h2><ol><li><strong>Predict the next move.</strong> Pause after assignment. Where should each centroid move?</li><li><strong>Explain the loss curve.</strong> Why can the assignment step and the mean update each avoid increasing SSE?</li><li><strong>Change the seed.</strong> Keep K and the features fixed. Does the final partition or SSE change?</li><li><strong>Add rain, then change scaling.</strong> What happens when precipitation joins the distance calculation? Which features dominate without standardization?</li><li><strong>Question K = 3.</strong> Compare several values. Are the groups useful, or are we dividing a continuum?</li></ol></div><div class="method-card"><h2>What is being minimized?</h2><p class="formula">SSE = Σ<sub>i</sub> ‖x<sub>i</sub> − μ<sub>assigned(i)</sub>‖²</p><p>Assignments change while the centers stay fixed. Then centers move to the coordinate-wise means while assignments stay fixed.</p><p>A stable run is not a guarantee of the best possible partition. The companion notebook uses multiple starts and keeps the smallest final inertia.</p><details><summary>Algorithm and data details</summary><p>This dashboard implements Lloyd’s algorithm with squared Euclidean distance. Exact distance ties go to the lowest-numbered cluster. An empty cluster retains its previous center; the interface flags it. A run stops when a reassignment changes no memberships, or after 100 mean updates.</p><p>Standardization uses the population standard deviation (ddof = 0), as in scikit-learn’s StandardScaler. A constant feature is mapped to zero. Random starts sample distinct profiles; KMeans++ uses standard D² sampling. The random generator and initialization procedure differ from scikit-learn, so identical seed numbers across implementations need not produce identical starts.</p><p>Hourly data are model-based estimates from the Open-Meteo Forecast API’s recent past. They are not independent station readings. Adjacent hours are related in time; these clusters describe the selected period and features, not validated meteorological classes.</p></details></div></section>
+
+    <footer><div><strong>DS 6021 · Prince Afriyie</strong><span>University of Virginia · School of Data Science</span></div><p>Weather data: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">API documentation</a> · <a href="weather-snapshot.csv" download>Saved data</a> · <a href="https://github.com/afriyiep1/ds6021-predictive-modeling/tree/main/docs/kmeans" target="_blank" rel="noopener">Source on GitHub</a></p></footer>
+  </main>
+</body>
+</html>
