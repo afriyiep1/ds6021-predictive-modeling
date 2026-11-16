@@ -112,6 +112,20 @@ All four fits standardize using training data only. The majority-class baseline 
 
 These interactive test results support classroom exploration. Repeatedly choosing settings based on these results uses the held-out period for model selection; a formal analysis should use validation data and retain a separate final test period.
 
+## Compare the KNN neighbor count
+
+At the bottom of the KNN tab, **Balanced accuracy versus number of neighbors** compares every integer k from 1 through 50 by default. The upper limit can be changed up to the number of available training hours. Both even and odd values are included; the four-class target can have tied votes for either.
+
+Every point uses the same prepared training and test observations as the fitted KNN view: the earlier 80% of complete UTC days train the classifier, and the latest 20% are held out. The selected 2D/3D predictors and raw/standardized setting apply to the entire curve. Standardization is fitted only on the training hours. Changing the active data, dimensions, or scaling recalculates the curve; changing only the fitted neighbor count reuses the comparison and updates its highlight.
+
+The vertical axis is **test balanced accuracy**, expressed as a percentage. It is the arithmetic mean of recall across the actual categories present in the test period, exactly matching the side-panel metric. A category present in test but absent from training contributes recall zero. The majority-category baseline uses the most frequent training category. Each test hour's ordered neighbors are calculated once at the maximum k; accumulating their votes gives the same predictions as fitting each k separately. Distance ties use the earlier training row, and vote ties use the lowest class ID.
+
+Click a point or select a neighbor count to inspect its score, then use the explicit apply control to refit the main KNN demonstration with that k. The plot identifies the highest test balanced accuracy among the displayed candidates and reports ties; this is a descriptive comparison rather than a claim of a uniquely optimal k. A fitted value outside the plotted range is identified explicitly.
+
+On the saved snapshot with standardized predictors, the k=15 point is 67.3077% in 2D and 74.4505% in 3D, matching the existing side panel. Among k=1–50, k=5 gives the highest score in both cases: 72.8537% in 2D and 79.9966% in 3D.
+
+This curve is intended for classroom exploration. Choosing k after examining it uses the test period for model selection. A formal analysis should select k with validation data or suitable cross-validation and evaluate once on a separate final test period.
+
 ## Compare the learning tasks in class
 
 1. In KMeans, place several centers close together and ask where they will move. Repeat with spread-out centers. Compare final SSE while keeping the dataset, K, dimensions, and scaling fixed.
@@ -140,9 +154,10 @@ The included numerical checks run with:
 node tests/kmeans-core.test.cjs
 node tests/selection-core.test.cjs
 node tests/supervised-core.test.cjs
+node tests/knn-selection-core.test.cjs
 ```
 
-They verify the hand-calculated example, non-increasing SSE, deterministic ties, empty clusters, constant features, duplicate profiles, stopping behavior, and real-data runs in both dimensions. The selection checks also cover exact silhouette calculations, singleton and undefined cases, reproducibility, and the multiple-start elbow comparisons. The implementation has also been compared with scikit-learn using identical initial centers.
+They verify the hand-calculated example, non-increasing SSE, deterministic ties, empty clusters, constant features, duplicate profiles, stopping behavior, and real-data runs in both dimensions. The selection checks also cover exact silhouette calculations, singleton and undefined cases, reproducibility, and the multiple-start elbow comparisons. KNN comparison checks cover hand-calculated balanced accuracy, distance/vote ties, absent classes, and agreement with the existing classifier for all 200 combinations of k=1–50, raw/standardized predictors, and 2D/3D. The implementation has also been compared with scikit-learn using identical initial centers.
 
 ## Lecture notes
 

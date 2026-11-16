@@ -86,6 +86,7 @@
           <div><h3>What do the labels mean?</h3><p>The four targets combine the provider’s WMO codes: 0–1 clear/mainly clear, 2 partly cloudy, 3 overcast, and supported fog or precipitation codes. They are supplied labels, not KMeans cluster numbers. They are model-based weather categories, not independent station observations.</p></div>
         </section>
         <details class="sl-methods"><summary>Evaluation, ${knn ? 'neighbor rules' : 'coefficients'}, and interpretation details</summary><div data-role="method-detail"></div><p>Both classifier tabs use the same complete UTC days: the earlier 80% train the model and the most recent 20% form the test set. Scaling is fitted on training hours only. Adjacent hours can be related, so this is a temporal holdout rather than a random split of individual hours.</p><p>These variables and the weather-code target describe the same hour and may share definitions. High classification accuracy does not establish future forecasting skill.</p><p>Changing settings after examining these test metrics is exploratory. Formal model tuning needs validation data and a separate final test set.</p><p>Balanced accuracy averages recall over categories present in the evaluated split. Macro F1 averages all four categories, using zero for undefined class F1. Log loss uses natural logarithms and clips probabilities at 10<sup>−15</sup> for numerical evaluation.</p><p>Weather definitions: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo documentation ↗</a>.</p></details>
+        ${knn ? '<div id="knn-k-selection"></div>' : ''}
       </section>`;
   }
 
@@ -96,6 +97,8 @@
     container.classList.add('supervised-lab');
     container.innerHTML = template(mode);
     state.el = role => container.querySelector(`[data-role="${role}"]`);
+    state.diagnostics = mode === 'knn' ? window.KNNDiagnostics : null;
+    if (state.diagnostics) state.diagnostics.setActive(state.active);
 
     ['dimensions', 'standardize', mode === 'knn' ? 'k' : 'lambda'].forEach(role => state.el(role).addEventListener('change', () => {
       state.dirty = true;
@@ -111,12 +114,14 @@
     const onData = event => {
       state.data = event.detail && event.detail.dataset ? event.detail.dataset : getDataset();
       state.sourceMode = event.detail && event.detail.sourceMode ? event.detail.sourceMode : 'snapshot';
+      if (state.diagnostics) state.diagnostics.invalidate();
       state.dirty = true;
       state.token++;
       if (state.active) fit(state);
     };
     const onTab = event => {
       state.active = Boolean(event.detail && event.detail.mode === mode);
+      if (state.diagnostics) state.diagnostics.setActive(state.active);
       if (!state.active) return;
       const latest = getDataset();
       // getDataset() deliberately returns a defensive clone. Reopening a tab
@@ -128,6 +133,15 @@
     };
     document.addEventListener('weather-data-changed', onData);
     document.addEventListener('learning-tab-changed', onTab);
+    const onUseK = event => {
+      if (mode !== 'knn' || !state.result) return;
+      const k = Number(event.detail && event.detail.k);
+      if (!Number.isInteger(k) || k < 1 || k > state.result.prepared.train.rows.length) return;
+      state.el('k').value = String(k);
+      state.dirty = true;
+      if (state.active) fit(state);
+    };
+    if (mode === 'knn') document.addEventListener('knn-use-k', onUseK);
     const onResize = () => { if (state.active && state.result && window.Plotly) Plotly.Plots.resize(state.el('scatter')); };
     window.addEventListener('resize', onResize);
 
@@ -137,7 +151,7 @@
         selected: state.selected, fitted: Boolean(state.result), settings: state.result ? { k: state.result.model.k, lambda: state.result.model.lambda } : null,
         test: state.result ? state.result.testMetrics : null, train: state.result ? state.result.trainMetrics : null,
         split: state.result ? state.result.prepared.metadata : null }),
-      destroy: () => { state.token++; document.removeEventListener('weather-data-changed', onData); document.removeEventListener('learning-tab-changed', onTab); window.removeEventListener('resize', onResize); if (state.boundPlot && window.Plotly) Plotly.purge(state.el('scatter')); instances.delete(mode); container.innerHTML = ''; }
+      destroy: () => { state.token++; document.removeEventListener('weather-data-changed', onData); document.removeEventListener('learning-tab-changed', onTab); document.removeEventListener('knn-use-k', onUseK); window.removeEventListener('resize', onResize); if (state.diagnostics) state.diagnostics.destroy(); if (state.boundPlot && window.Plotly) Plotly.purge(state.el('scatter')); instances.delete(mode); container.innerHTML = ''; }
     };
     instances.set(mode, state);
     if (state.active) fit(state);
@@ -197,10 +211,12 @@
       renderSummary(state);
       renderSelection(state);
       renderMethods(state);
+      if (state.diagnostics) state.diagnostics.update({ prepared, selectedK: model.k, sourceMode: state.sourceMode });
       await renderScatter(state);
     } catch (error) {
       if (token !== state.token) return;
       state.result = null;
+      if (state.diagnostics) state.diagnostics.invalidate();
       state.dirty = true;
       state.el('results').hidden = true;
       state.el('status').textContent = 'The model could not be fitted with these settings.';
