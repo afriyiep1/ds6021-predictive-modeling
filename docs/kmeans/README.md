@@ -28,18 +28,18 @@ Attribution: Weather data by [Open-Meteo.com](https://open-meteo.com/), [CC BY 4
 
 ## Suggested classroom sequence
 
-1. Begin with 2D, K=3, standardization on, and random seed 6021. Ask students what one point represents and what information the algorithm does not receive.
+1. Begin with 2D, K=3, **Standardized · z-scores**, and random seed 6021. Ask students what one point represents and what information the algorithm does not receive.
 2. Click **Assign points**. Centers stay fixed; labels/colors change. Ask which center each point chooses.
 3. Click **Update means**. Labels stay fixed; centers move to coordinatewise means. Explain why this cannot increase total squared error.
 4. Use playback, the back button, or the history slider to inspect the same recorded states. Axes stay fixed during a run, and the loss chart uses the current assignments and centers.
 5. Finish the default 2D run, then switch initialization to KMeans++ while keeping the same seed. The fixed snapshot gives SSE about 1008.34 and 559.35, respectively. Convergence alone does not establish a global optimum.
 6. Switch to 3D. This refits using precipitation; it is not a projection of the 2D fit. Rotate the view and compare the new profiles. With the saved snapshot, KMeans++ and seed 42 reproduce the notebook's three-feature partition up to cluster-ID names (SSE about 1556.32). If WebGL is unavailable, the software 3D projection still fits all three coordinates and provides rotation controls.
 7. Change K, scaling, or the seed, one at a time. Interpret centers in raw units, and ask whether the groups are useful for the question.
-8. Use the notebook's multiple-start fits, elbow plot, and silhouette plot to evaluate the decisions more systematically.
+8. Scroll to **Compare the number of clusters**. Inspect the WCSSE elbow, mean silhouette, and silhouette profiles across K. Switch between raw and standardized variables to explain how the definition of distance changes the result. Use the notebook to reproduce and extend the analysis.
 
 The notebook uses `KMeans(init="k-means++", n_init=20, random_state=6021, algorithm="lloyd", tol=0, max_iter=300)`. Its 3D fit yields groups of 954, 474, and 12 hours, with arbitrary numerical IDs. Their mean cloud cover/humidity/precipitation are approximately (6.24%, 62.12%, 0 mm), (91.79%, 85.82%, 0.044 mm), and (100%, 94.42%, 4.042 mm). There are 32 nonzero-precipitation hours in the larger cloudy group, plus 12 in the wetter group. Do not rename these three clusters as guaranteed sunny/cloudy/rainy classes.
 
-The dashboard illustrates **one initialization**. Its final result need not equal the notebook's best of 20 starts. Its random generator differs from NumPy/scikit-learn, and its KMeans++ implements standard D-squared sampling rather than scikit-learn's greedy variant. Equal seed numbers across implementations do not imply equal starting centers.
+The dashboard's step-through animation illustrates **one initialization**. Its final result need not equal the separate multiple-start comparisons at the bottom of the page or the notebook's best of 20 starts. Its random generator differs from NumPy/scikit-learn, and its KMeans++ implements standard D-squared sampling rather than scikit-learn's greedy variant. Equal seed numbers across implementations do not imply equal starting centers.
 
 ## Place starting centroids
 
@@ -49,6 +49,25 @@ The KMeans tab retains random distinct observations and KMeans++ and adds two ch
 - **Randomize centers:** choose a new visible seed and sample positions across the feature ranges. This intentionally allows starting centers between observations. The new run begins with gray, unassigned points. The named initialization is **Random positions in feature space**.
 
 Cloud cover and humidity coordinates must be between 0 and 100; precipitation must be nonnegative. Manual coordinates are transformed using the active KMeans scaling. Axes include valid user centers that fall outside the observed data range. Changing K, dimensions, scaling, or the dataset starts a new setup. Switching tabs preserves each model's settings and pauses KMeans playback.
+
+## Compare K and variable scaling
+
+The **Variable scale** selector explicitly offers **Raw · original units** and **Standardized · z-scores**. Standardized is the default: each active feature is centered at its mean and divided by its population standard deviation, using the active clustering observations. A constant feature becomes zero. Raw retains percentages and millimeters, so variables with larger numerical variation can dominate Euclidean distances. Standardization changes the clustering problem; it is not only a change to the axis labels. The centroid table and manual-entry coordinates remain in original weather units in either mode.
+
+The bottom **Compare the number of clusters** section uses the same active observations, dimensions, and scaling as the KMeans animation. It includes:
+
+- **WCSSE versus K:** within-cluster sum of squared Euclidean distances to the assigned centers, for K = 1 through 10, capped by the number of distinct feature profiles. Look for diminishing improvements rather than the smallest WCSSE, which favors larger K.
+- **Mean silhouette versus K:** the mean of the individual observations' silhouette scores. Click a point in either summary chart or use the profile selector to inspect a candidate K.
+- **A full silhouette profile:** individual scores sorted within their assigned clusters, with a reference line at the overall mean. Profile thickness shows cluster size; negative scores identify hours closer on average to another cluster than to their own.
+- **Compare silhouette profiles across K:** expandable profiles on a common −1 to +1 scale. Inspect cluster sizes, negative scores, and the distribution of scores as well as the mean. Cluster IDs are arbitrary within each fit and do not identify matching groups across K.
+
+For each K, `selection-core.js` tries ten reproducible KMeans++ initializations and retains the fit with the lowest WCSSE. For each K above 1, it also tries a continuation fit: the preceding K's best centers plus the observation farthest from its nearest center. This additional candidate preserves a non-increasing WCSSE curve through actual fitted solutions. It does not guarantee the global minimum. Each candidate allows up to 300 mean updates; iteration limits and empty clusters are reported. Comparisons run in a worker when available and recompute when the data, dimensions, scaling, or random seed changes.
+
+Silhouette calculations are **exact for all active observations**, using ordinary Euclidean distances in the selected feature space, not squared distances or a sampled subset. For observation i, a(i) is its average distance to other members of its own cluster, and b(i) is the smallest average distance to another cluster. Its score is `(b(i) − a(i)) / max(a(i), b(i))`, ranging from −1 to +1. A singleton cluster member receives 0 by convention and remains in the overall mean. A zero denominator also gives 0. A silhouette is undefined when there is only one occupied cluster, including K = 1, or when every observation is its own cluster; the interface leaves those scores undefined.
+
+These diagnostics are separate fits from the animation's single chosen initialization. **Use this K in animation** changes the animated run's K; it does not load the diagnostic fit's centers or memberships. Consequently, the animation can finish with a different WCSSE or partition. The notebook independently keeps the best of 20 starts and can differ again.
+
+Compare WCSSE values only while keeping the observations, dimensions, and scaling fixed. Raw and standardized WCSSE have different meanings and scales. Although silhouettes share a −1 to +1 range, changing scaling changes their underlying distance definition; a larger silhouette alone does not establish which scaling is appropriate. The highest mean silhouette identifies a candidate among the tested K values, not a uniquely optimal K. Combine it with the elbow, profile shapes, small-cluster behavior, and the weather interpretation. These checks do not establish true meteorological classes or account for the temporal dependence of neighboring hours.
 
 ## Supervised target and evaluation
 
@@ -119,10 +138,11 @@ The included numerical checks run with:
 
 ```bash
 node tests/kmeans-core.test.cjs
+node tests/selection-core.test.cjs
 node tests/supervised-core.test.cjs
 ```
 
-They verify the hand-calculated example, non-increasing SSE, deterministic ties, empty clusters, constant features, duplicate profiles, stopping behavior, and real-data runs in both dimensions. The implementation has also been compared with scikit-learn using identical initial centers.
+They verify the hand-calculated example, non-increasing SSE, deterministic ties, empty clusters, constant features, duplicate profiles, stopping behavior, and real-data runs in both dimensions. The selection checks also cover exact silhouette calculations, singleton and undefined cases, reproducibility, and the multiple-start elbow comparisons. The implementation has also been compared with scikit-learn using identical initial centers.
 
 ## Lecture notes
 

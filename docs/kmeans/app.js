@@ -2,7 +2,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const Core = window.KMeansCore;
-  const palette = ['#232D4B', '#D96A00', '#147D80', '#8252A0', '#7B8526', '#B04446'];
+  const palette = ['#232D4B', '#D96A00', '#147D80', '#8252A0', '#7B8526', '#B04446', '#3878A6', '#A65D7D', '#6C7460', '#A57725'];
   const featureInfo = {
     cloud_cover: { short: 'Cloud cover', unit: '%', digits: 1 },
     relative_humidity_2m: { short: 'Relative humidity', unit: '%', digits: 1 },
@@ -34,6 +34,8 @@
   let sourceMode = 'snapshot';
   let webGLAvailable = false;
   const settings = ['dimensions', 'clusters', 'initialization', 'seed', 'standardize'];
+
+  function standardized() { return $('standardize').value === 'standardized'; }
 
   function supportsWebGL() {
     try {
@@ -290,10 +292,10 @@
       if (!manual && (!seedText || !Number.isInteger(seed) || seed < 0 || seed > 4294967295)) throw new Error('Enter an integer random seed from 0 to 4,294,967,295.');
       const nextFeatures = ['cloud_cover', 'relative_humidity_2m'];
       if ($('dimensions').value === '3') nextFeatures.push('precipitation');
-      const nextPrepared = Core.prepare(dataset.rows, nextFeatures, $('standardize').checked);
+      const nextPrepared = Core.prepare(dataset.rows, nextFeatures, standardized());
       const k = Number($('clusters').value);
       const sameGeometry = fittedSettings && fittedSettings.mode === mode && fittedSettings.dimensions === nextFeatures.length
-        && fittedSettings.standardize === $('standardize').checked && fittedDataset === dataset;
+        && fittedSettings.standardize === standardized() && fittedDataset === dataset;
       const suppliedBounds = options.bounds && options.bounds.length === nextFeatures.length ? options.bounds : null;
       const bounds = mode === 'random-space' ? suppliedBounds || (sameGeometry && fittedSettings.bounds) || nextFeatures.map((_, j) => {
         const values = nextPrepared.points.map(point => point[j]);
@@ -305,7 +307,7 @@
       prepared = nextPrepared;
       frames = nextFrames;
       fittedSeed = manual ? null : seed;
-      fittedSettings = { k, dimensions: features.length, standardize: $('standardize').checked, mode, seed: fittedSeed,
+      fittedSettings = { k, dimensions: features.length, standardize: standardized(), mode, seed: fittedSeed,
         bounds: bounds ? bounds.map(range => range.slice()) : null };
       fittedDataset = dataset;
       manualPending = manual;
@@ -315,13 +317,16 @@
       runNumber++;
       $('timeline').max = frames.length - 1;
       $('timeline').disabled = manual;
-      $('geometry-note').textContent = `${features.length}D fitting uses ${features.map(key => featureInfo[key].short.toLowerCase()).join(' + ')}. Changing dimensions refits the model; it does not just change the view. ${$('standardize').checked ? 'Distances and axes use standardized values.' : 'Distances and axes use original units; feature scales now determine their influence.'}`;
+      $('geometry-note').textContent = `${features.length}D fitting uses ${features.map(key => featureInfo[key].short.toLowerCase()).join(' + ')}. Changing dimensions refits the model; it does not just change the view. ${standardized() ? 'Distances and axes use standardized values.' : 'Distances and axes use original units; feature scales now determine their influence.'}`;
       const warnings = [];
       if (prepared.constantFeatures.length) warnings.push(`Constant features contribute zero distance: ${prepared.constantFeatures.map(key => featureInfo[key].short).join(', ')}.`);
       if (dataset.omitted) warnings.push(`${dataset.omitted} incomplete or duplicate hours were omitted.`);
       showMessage(warnings.join(' '));
       updateManualControls();
       render();
+      const diagnosticSeed = seedText && Number.isInteger(seed) && seed >= 0 && seed <= 4294967295 ? seed : 6021;
+      window.KMeansDiagnostics.update({ points: prepared.points, features: features.slice(),
+        standardize: fittedSettings.standardize, seed: diagnosticSeed, selectedK: k, sourceMode, rows: prepared.rows });
       return true;
     } catch (error) {
       showMessage(error.message, true);
@@ -332,7 +337,7 @@
 
   function ensureCurrentSeed() {
     if (!fittedSettings || fittedSettings.mode !== $('initialization').value || fittedSettings.k !== Number($('clusters').value)
-      || fittedSettings.dimensions !== Number($('dimensions').value) || fittedSettings.standardize !== $('standardize').checked) {
+      || fittedSettings.dimensions !== Number($('dimensions').value) || fittedSettings.standardize !== standardized()) {
       if (!setupRun()) return false;
     }
     if (isManualMode()) return !manualPending && frames.length > 1;
@@ -381,7 +386,7 @@
     $('secondary-label').textContent = frame.phase === 'update' ? 'Total centroid movement' : frame.phase === 'initialize' ? 'Assigned hours' : frame.iteration === 1 ? 'First assignments' : 'Changed memberships';
     $('secondary-value').textContent = frame.phase === 'update' ? numberFormat.format(frame.shift) : frame.phase === 'initialize' ? '0' : frame.changed.toLocaleString();
     $('secondary-detail').textContent = frame.phase === 'update' ? 'Euclidean norm of all center shifts' : frame.phase === 'initialize' ? 'No assignments yet' : `Out of ${prepared.rows.length.toLocaleString()} hours`;
-    $('plot-units').textContent = $('standardize').checked ? 'Standardized coordinates (z-scores)' : 'Original weather units';
+    $('plot-units').textContent = standardized() ? 'Standardized coordinates (z-scores)' : 'Original weather units';
     $('projection-controls').hidden = !projected3D();
     $('azimuth-value').textContent = `${$('azimuth').value}°`;
     $('elevation-value').textContent = `${$('elevation').value}°`;
@@ -417,7 +422,7 @@
     return [Math.max(lower, min - padding), Math.min(upper, max + padding)];
   }
 
-  function axisTitle(key) { return `${featureInfo[key].short} (${$('standardize').checked ? 'z-score' : featureInfo[key].unit})`; }
+  function axisTitle(key) { return `${featureInfo[key].short} (${standardized() ? 'z-score' : featureInfo[key].unit})`; }
 
   function attachPlotPointClick() {
     const plot = $('scatter');
@@ -686,6 +691,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
   document.addEventListener('learning-tab-changed', event => {
     activeLearningMode = event.detail && event.detail.mode || 'kmeans';
+    window.KMeansDiagnostics.setActive(activeLearningMode === 'kmeans');
     if (activeLearningMode !== 'kmeans') { pause(); renderRevision++; return; }
     requestAnimationFrame(() => {
       render();
@@ -696,8 +702,15 @@
     });
   });
 
+  document.addEventListener('kmeans-use-k', event => {
+    const k = Number(event.detail && event.detail.k);
+    if (!dataset || !Number.isInteger(k) || k < 1 || k > 10) return;
+    $('clusters').value = String(k);
+    setupRun();
+  });
+
   // Read-only state inspection supports reproducing and checking the teaching run.
-  window.KMeansLab = { getDataset, getState: () => ({ sourceMode, cursor, features: features.slice(), standardize: fittedSettings ? fittedSettings.standardize : $('standardize').checked,
+  window.KMeansLab = { getDataset, getState: () => ({ sourceMode, cursor, features: features.slice(), standardize: fittedSettings ? fittedSettings.standardize : standardized(),
     k: Number($('clusters').value), seed: fittedSeed, requestedSeed: $('seed').value, rowCount: prepared ? prepared.rows.length : 0,
     initialization: fittedSettings ? fittedSettings.mode : null, fittedSettings: fittedSettings ? JSON.parse(JSON.stringify(fittedSettings)) : null,
     manualPending, manualCentersRaw: manualDraft.map(center => center.slice()), activeLearningMode,
