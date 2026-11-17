@@ -11,7 +11,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const CLASS_NAMES = Object.freeze(['Clear / mainly clear', 'Partly cloudy', 'Overcast', 'Fog / precipitation']);
+  const CLASS_NAMES = Object.freeze(['Clear / mainly clear', 'Partly cloudy', 'Overcast']);
   const FEATURES_2D = Object.freeze(['cloud_cover', 'relative_humidity_2m']);
   const FEATURES_3D = Object.freeze([...FEATURES_2D, 'precipitation']);
   const WET_CODES = new Set([45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 97, 99]);
@@ -22,11 +22,12 @@
     if (code === 0 || code === 1) return 0;
     if (code === 2) return 1;
     if (code === 3) return 2;
-    return WET_CODES.has(code) ? 3 : null;
+    // Other conditions (fog, rain, snow, thunderstorms) are outside this three-class task.
+    return null;
   }
 
   function support(y) {
-    const counts = [0, 0, 0, 0];
+    const counts = Array(CLASS_NAMES.length).fill(0);
     y.forEach(label => counts[label]++);
     return counts;
   }
@@ -47,20 +48,27 @@
     const standardize = options.standardize !== false;
     const testFraction = options.testFraction === undefined ? 0.2 : Number(options.testFraction);
     if (!(testFraction > 0 && testFraction < 1)) throw new Error('The test fraction must be between zero and one.');
-    const omissions = { unknownCodeRows: 0, invalidFeatureRows: 0, invalidTimeRows: 0, duplicateTimeRows: 0, incompleteDayRows: 0, incompleteDays: 0 };
+    // Keep complete UTC days based on the source series BEFORE filtering weather codes.
+    // Otherwise even one rainy hour would cause its entire day to be omitted.
+    const omissions = { excludedOtherWeatherRows: 0, unknownCodeRows: 0, invalidFeatureRows: 0,
+      invalidTimeRows: 0, duplicateTimeRows: 0, incompleteDayRows: 0, incompleteDays: 0 };
     const unknownCodes = new Set();
-    const usable = [];
+    const completeCandidates = [];
     rows.forEach((row, index) => {
-      const label = classForWeatherCode(row.weather_code);
-      if (label === null) { omissions.unknownCodeRows++; unknownCodes.add(row.weather_code == null ? 'missing' : String(row.weather_code)); return; }
       if (!features.every(key => Number.isFinite(row[key]))) { omissions.invalidFeatureRows++; return; }
       if (!Number.isInteger(row.time) || row.time % 3600 !== 0) { omissions.invalidTimeRows++; return; }
-      usable.push({ row, index, label });
+      const code = row.weather_code;
+      const label = classForWeatherCode(code);
+      if (label === null) {
+        if (WET_CODES.has(code)) omissions.excludedOtherWeatherRows++;
+        else { omissions.unknownCodeRows++; unknownCodes.add(code == null ? 'missing' : String(code)); }
+      }
+      completeCandidates.push({ row, index, label });
     });
-    usable.sort((a, b) => a.row.time - b.row.time || a.index - b.index);
+    completeCandidates.sort((a, b) => a.row.time - b.row.time || a.index - b.index);
     const seen = new Set();
     const days = new Map();
-    usable.forEach(item => {
+    completeCandidates.forEach(item => {
       if (seen.has(item.row.time)) { omissions.duplicateTimeRows++; return; }
       seen.add(item.row.time);
       const day = Math.floor(item.row.time / 86400);
@@ -69,13 +77,17 @@
     });
     const completeDays = [...days.keys()].filter(day => {
       const complete = days.get(day).length === 24;
-      if (!complete) { omissions.incompleteDays++; omissions.incompleteDayRows += days.get(day).length; }
+      if (!complete) {
+        omissions.incompleteDays++;
+        omissions.incompleteDayRows += days.get(day).length;
+      }
       return complete;
     }).sort((a, b) => a - b);
-    if (completeDays.length < 2) throw new Error('At least two complete UTC days with known weather codes and usable predictors are needed for a chronological train/test split.');
+    if (completeDays.length < 2) throw new Error('At least two complete UTC days with usable weather measurements are needed for a chronological train/test split.');
     const nTrainDays = Math.max(1, Math.min(completeDays.length - 1, Math.floor(completeDays.length * (1 - testFraction))));
-    const trainItems = completeDays.slice(0, nTrainDays).flatMap(day => days.get(day));
-    const testItems = completeDays.slice(nTrainDays).flatMap(day => days.get(day));
+    const trainItems = completeDays.slice(0, nTrainDays).flatMap(day => days.get(day)).filter(item => item.label !== null);
+    const testItems = completeDays.slice(nTrainDays).flatMap(day => days.get(day)).filter(item => item.label !== null);
+    if (!trainItems.length || !testItems.length) throw new Error('The chronological train/test split needs at least one clear, partly cloudy, or overcast hour in each portion.');
     const rawTrain = trainItems.map(item => features.map(key => item.row[key]));
     const mean = features.map((_, j) => rawTrain.reduce((sum, row) => sum + row[j], 0) / rawTrain.length);
     const deviations = mean.map((average, j) => Math.sqrt(rawTrain.reduce((sum, row) => sum + (row[j] - average) ** 2, 0) / rawTrain.length));
@@ -89,24 +101,31 @@
     const missingTrainClasses = train.support.flatMap((count, i) => count === 0 ? [i] : []);
     const missingTestClasses = test.support.flatMap((count, i) => count === 0 ? [i] : []);
     const warnings = [];
-    if (omissions.unknownCodeRows) warnings.push(`${omissions.unknownCodeRows} hour(s) omitted because the provider code is unknown or missing: ${[...unknownCodes].join(', ')}.`);
-    if (omissions.invalidFeatureRows) warnings.push(`${omissions.invalidFeatureRows} hour(s) omitted because selected predictors are missing or nonfinite.`);
-    if (omissions.invalidTimeRows) warnings.push(`${omissions.invalidTimeRows} row(s) omitted because timestamps are not exact UTC hours.`);
-    if (omissions.duplicateTimeRows) warnings.push(`${omissions.duplicateTimeRows} duplicate timestamp(s) omitted; the first record was retained.`);
-    if (omissions.incompleteDays) warnings.push(`${omissions.incompleteDays} incomplete UTC day(s) omitted, removing ${omissions.incompleteDayRows} additional otherwise usable hour(s).`);
-    if (missingTrainClasses.length) warnings.push(`Training has no ${missingTrainClasses.map(i => CLASS_NAMES[i]).join(', ')} examples. These classes cannot be learned and receive probability zero.`);
-    if (missingTestClasses.length) warnings.push(`Test has no ${missingTestClasses.map(i => CLASS_NAMES[i]).join(', ')} examples. Balanced accuracy averages only classes present in the evaluated split; macro F1 still includes all four classes.`);
+    if (omissions.excludedOtherWeatherRows) warnings.push(omissions.excludedOtherWeatherRows + ' fog/precipitation hour(s) excluded from this three-category task; these hours are not relabeled as clear, partly cloudy, or overcast.');
+    if (omissions.unknownCodeRows) warnings.push(omissions.unknownCodeRows + ' hour(s) omitted because provider codes are missing or not among the recognized weather codes: ' + [...unknownCodes].join(', ') + '.');
+    if (omissions.invalidFeatureRows) warnings.push(omissions.invalidFeatureRows + ' hour(s) omitted because selected predictors are missing or nonfinite.');
+    if (omissions.invalidTimeRows) warnings.push(omissions.invalidTimeRows + ' row(s) omitted because timestamps are not exact UTC hours.');
+    if (omissions.duplicateTimeRows) warnings.push(omissions.duplicateTimeRows + ' duplicate timestamp(s) omitted; the first record was retained.');
+    if (omissions.incompleteDays) warnings.push(omissions.incompleteDays + ' incomplete UTC day(s) omitted, removing ' + omissions.incompleteDayRows + ' additional otherwise usable hour(s).');
+    if (missingTrainClasses.length) warnings.push('Training has no ' + missingTrainClasses.map(i => CLASS_NAMES[i]).join(', ') + ' examples. These classes cannot be learned and receive probability zero.');
+    if (missingTestClasses.length) warnings.push('Test has no ' + missingTestClasses.map(i => CLASS_NAMES[i]).join(', ') + ' examples. Balanced accuracy averages only represented classes; macro F1 still includes all three categories.');
+    train.support.forEach((count, i) => {
+      if (count > 0 && count / train.y.length < 0.1) warnings.push(CLASS_NAMES[i] + ' is uncommon in training (' + count + ' of ' + train.y.length + ' hours). Inspect its recall; accuracy alone may be misleading.');
+    });
     const constantFeatures = features.filter((_, j) => deviations[j] === 0);
-    if (constantFeatures.length) warnings.push(`Constant training predictor(s): ${constantFeatures.join(', ')}; their scale is set to one.`);
+    if (constantFeatures.length) warnings.push('Constant training predictor(s): ' + constantFeatures.join(', ') + '; their scale is set to one.');
     return { train, test, scaler, features, classNames: [...CLASS_NAMES], warnings, metadata: {
-      split: 'chronological complete UTC days', testFraction, actualTestFraction: test.rows.length / (train.rows.length + test.rows.length),
+      split: 'chronological complete UTC days, then eligible-class filtering', testFraction,
+      actualTestFraction: test.rows.length / (train.rows.length + test.rows.length),
       totalDays: completeDays.length, trainDays: nTrainDays, testDays: completeDays.length - nTrainDays,
       trainCount: train.rows.length, testCount: test.rows.length,
-      trainStart: train.rows[0].time, trainEnd: train.rows.at(-1).time, testStart: test.rows[0].time, testEnd: test.rows.at(-1).time,
+      trainStart: train.rows[0].time, trainEnd: train.rows.at(-1).time,
+      testStart: test.rows[0].time, testEnd: test.rows.at(-1).time,
       inputRows: rows.length, usedRows: train.rows.length + test.rows.length,
-      droppedRows: rows.length - train.rows.length - test.rows.length, omissions, unknownCodes: [...unknownCodes],
+      droppedRows: rows.length - train.rows.length - test.rows.length,
+      omissions, unknownCodes: [...unknownCodes],
       missingTrainClasses, missingTestClasses, constantFeatures,
-      target: 'Same-hour provider weather category; not a future-weather forecast.',
+      target: 'Same-hour provider codes 0–1 (clear/mainly clear), 2 (partly cloudy), 3 (overcast). Fog and precipitation are excluded. Not a future-weather forecast.',
       targetSource: 'Open-Meteo WMO weather codes', targetSourceUrl: 'https://open-meteo.com/en/docs'
     } };
   }
@@ -115,7 +134,7 @@
     if (!Array.isArray(X) || !X.length || !Array.isArray(y) || X.length !== y.length) throw new Error('Aligned nonempty training predictors and labels are required.');
     const p = X[0].length;
     if (!p || !X.every(row => Array.isArray(row) && row.length === p && row.every(Number.isFinite))) throw new Error('Training predictors must be finite and have consistent dimensions.');
-    if (!y.every(label => Number.isInteger(label) && label >= 0 && label < CLASS_NAMES.length)) throw new Error('Training labels must be class IDs 0 through 3.');
+    if (!y.every(label => Number.isInteger(label) && label >= 0 && label < CLASS_NAMES.length)) throw new Error('Training labels must be class IDs 0 through 2.');
     return { p, classes: [...new Set(y)].sort((a, b) => a - b) };
   }
 
@@ -169,7 +188,7 @@
   }
 
   // Gaussian elimination with partial pivoting for the small Newton system
-  // (at most 15 parameters with four classes and three predictors).
+  // (at most 11 parameters with three classes and three predictors).
   function solveLinear(A, b) {
     const n = b.length;
     const a = A.map((row, i) => [...row, b[i]]);
@@ -299,7 +318,7 @@
   function predictProba(model, X) {
     if (!Array.isArray(X) || !X.every(row => Array.isArray(row) && row.length === model.dimensions && row.every(Number.isFinite))) throw new Error('Prediction rows must contain finite values in the fitted feature coordinates.');
     return X.map(point => {
-      const probabilities = [0, 0, 0, 0];
+      const probabilities = Array(CLASS_NAMES.length).fill(0);
       if (model.kind === 'knn') {
         nearestNeighbors(model, point).forEach(neighbor => probabilities[neighbor.label] += 1 / model.k);
       } else if (model.kind === 'softmax') {
@@ -321,8 +340,8 @@
 
   function evaluate(y, probabilities) {
     if (!Array.isArray(y) || !Array.isArray(probabilities) || y.length !== probabilities.length) throw new Error('Evaluation labels and probability rows must align.');
-    if (!y.every(label => Number.isInteger(label) && label >= 0 && label < CLASS_NAMES.length)) throw new Error('Evaluation labels must be class IDs 0 through 3.');
-    if (!probabilities.every(row => Array.isArray(row) && row.length === CLASS_NAMES.length && row.every(value => Number.isFinite(value) && value >= 0 && value <= 1 + 1e-12) && Math.abs(row.reduce((sum, value) => sum + value, 0) - 1) < 1e-8)) throw new Error('Each evaluation probability row must contain four nonnegative probabilities summing to one.');
+    if (!y.every(label => Number.isInteger(label) && label >= 0 && label < CLASS_NAMES.length)) throw new Error('Evaluation labels must be class IDs 0 through 2.');
+    if (!probabilities.every(row => Array.isArray(row) && row.length === CLASS_NAMES.length && row.every(value => Number.isFinite(value) && value >= 0 && value <= 1 + 1e-12) && Math.abs(row.reduce((sum, value) => sum + value, 0) - 1) < 1e-8)) throw new Error('Each evaluation probability row must contain three nonnegative probabilities summing to one.');
     const predictions = probabilities.map(argmax);
     const confusion = Array.from({ length: CLASS_NAMES.length }, () => Array(CLASS_NAMES.length).fill(0));
     let correct = 0, loss = 0, clippedTrueProbabilities = 0;
@@ -352,7 +371,7 @@
       representedClasses: represented.map(item => item.classId), macroF1ClassCount: CLASS_NAMES.length,
       confusionOrientation: 'predicted rows, actual columns', logLossEpsilon: LOG_LOSS_EPSILON, clippedTrueProbabilities,
       balancedAccuracyConvention: 'Mean recall across actual classes present in this split.',
-      macroF1Convention: 'Mean F1 across all four target classes; undefined class F1 is zero.' };
+      macroF1Convention: 'Mean F1 across all three target classes; undefined class F1 is zero.' };
   }
 
   return { CLASS_NAMES, FEATURES_2D, FEATURES_3D, LOG_LOSS_EPSILON, classForWeatherCode, prepareData,
