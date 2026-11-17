@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hierarchical Clustering · DS 6021 Lecture Notes</title>
+<style>
+:root{--navy:#232d4b;--orange:#e57200;--muted:#54657a;--line:#dce1e8}*{box-sizing:border-box}
+body{font:17px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#263650;margin:0;background:#fff}
+header{background:var(--navy);padding:22px max(22px,calc((100vw - 970px)/2));color:#fff;border-bottom:4px solid var(--orange)}
+header a{color:#fff}header small{color:#d7dfee}.container{max-width:970px;margin:auto;padding:38px 24px}
+h1{font:500 clamp(33px,5vw,49px) Georgia,serif;line-height:1.18;margin:0 0 14px}h2{font:500 30px Georgia,serif;color:var(--navy);border-top:1px solid var(--line);padding-top:30px;margin-top:36px}
+h3{color:var(--navy)}p{margin:12px 0}li{margin:9px 0}a{color:#245e80}a:hover{text-decoration:none}
+.kicker{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#bd581b;font-weight:700}
+.lede{font-size:20px;color:var(--muted)}.formula{font:21px/1.6 Georgia,serif;color:var(--navy);padding:16px 18px;background:#f6f8fb;border-left:3px solid var(--orange);overflow-x:auto}
+.example{background:#f6f8fb;border:1px solid var(--line);padding:16px 22px}.note{font-size:14px;color:var(--muted)}table{border-collapse:collapse;width:100%;font-size:15px}th,td{border-bottom:1px solid var(--line);text-align:left;padding:11px}th{background:#f6f8fb}code{font-size:15px}footer{border-top:1px solid var(--line);padding:24px;font-size:13px;color:var(--muted)}
+@media print{header{color:#111;background:#fff}a{color:#111}.container{max-width:none}h2{break-after:avoid}}
+</style></head><body>
+<header><strong>DS 6021 · Introduction to Predictive Modeling</strong><br><small>Hierarchical Clustering · Distance, Linkage &amp; Choosing K</small></header>
+<main class="container">
+<p class="kicker">Unsupervised learning · Lecture companion</p>
+<h1>Hierarchical Clustering: Building Groups from the Bottom Up</h1>
+<p class="lede">K-means asks us to pick K first. Hierarchical clustering lets the data build a tree of nested groups, then lets us decide where to cut it.</p>
+<p><a href="../index.html#hier">← Interactive weather dashboard</a> &nbsp;·&nbsp; <a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/Hierarchical_Clustering_Colab.ipynb">Open companion Python notebook ↗</a> &nbsp;·&nbsp; <a href="#" onclick="window.print();return false">Print / Save as PDF</a></p>
+
+<h2>1. Why hierarchical clustering?</h2>
+<p>Imagine clustering weather hours by cloud cover, humidity, and precipitation. In K-means we choose K, initialize K centroids, and update memberships. But what if we do not know whether the right answer is two weather regimes or six? Rather than start by fixing K, hierarchical clustering builds a sequence of merges.</p>
+<p><strong>Agglomerative:</strong> each observation starts alone; at each step merge the two closest groups. <strong>Divisive:</strong> start with all observations together and split. We focus on agglomerative clustering, because it is widely used and easy to visualize.</p>
+<div class="example"><strong>Intuition:</strong> If 48 observations start alone, there are initially 48 groups. After one merge there are 47, after two there are 46, and after 47 merges there is one group. The whole history is a <em>dendrogram</em>.</div>
+
+<h2>2. Begin with four viewers</h2>
+<p>Before clustering real weather data, use a tiny fictional streaming example. Students recently saw these types of ratings in the K-means lesson.</p>
+<table><tr><th>Viewer</th><th>Breaking Bad</th><th>Love Is Blind</th></tr><tr><td>A</td><td>1</td><td>1</td></tr><tr><td>B</td><td>1</td><td>2</td></tr><tr><td>C</td><td>4</td><td>4</td></tr><tr><td>D</td><td>4</td><td>5</td></tr></table>
+<p>The distance between A and B is 1, as is the distance between C and D. So the first two merges are A–B and C–D, in either order. Now the question becomes: <em>how far apart are the two groups {A,B} and {C,D}?</em></p>
+<p class="formula">Euclidean distance: d(x,y) = √[Σ<sub>j=1</sub><sup>p</sup>(x<sub>j</sub>−y<sub>j</sub>)²]</p>
+<p>A pairwise distance measures separation between <strong>two observations</strong>. A <em>linkage rule</em> determines the separation between <strong>two clusters</strong>.</p>
+
+<h2>3. Linkage rules: Which groups should merge?</h2>
+<table><tr><th>Rule</th><th>Cluster-to-cluster distance</th><th>Intuition</th></tr>
+<tr><td><strong>Single</strong></td><td>Smallest cross-cluster pairwise distance</td><td>One close bridge connects the groups; can chain</td></tr>
+<tr><td><strong>Complete</strong></td><td>Largest cross-cluster pairwise distance</td><td>Even the farthest pair should not be too far apart</td></tr>
+<tr><td><strong>Average</strong></td><td>Mean of all cross-cluster pairwise distances</td><td>Compromise between extremes</td></tr>
+<tr><td><strong>Ward</strong></td><td>Merge with the smallest increase in within-cluster SSE</td><td>Connects to the K-means objective</td></tr></table>
+<p>For A,B versus C,D the four cross-group Euclidean distances are √18, 5, √13, √18. Thus:</p>
+<p class="formula">Single = √13 ≈ 3.606 &nbsp;·&nbsp; Complete = 5 &nbsp;·&nbsp; Average ≈ 4.275</p>
+<p>Both the <strong>data</strong> and the <strong>distance metric</strong> stayed the same. Only the <strong>linkage definition</strong> changed, and so the final dendrogram height changes.</p>
+<p><strong>Ward's method:</strong> for two clusters A,B of sizes n<sub>A</sub>, n<sub>B</sub> and means x̄<sub>A</sub>, x̄<sub>B</sub>,</p>
+<p class="formula">ΔSSE(A,B) = [n<sub>A</sub>n<sub>B</sub>/(n<sub>A</sub>+n<sub>B</sub>)] ‖x̄<sub>A</sub>−x̄<sub>B</sub>‖².</p>
+<p>Ward greedily chooses the merge with smallest ΔSSE. It resembles K-means in optimizing within-group compactness, but it never reassigns points after a merge. In SciPy, Ward dendrogram height is √(2 × ΔSSE), not ΔSSE itself.</p>
+
+<h2>4. How do we read a dendrogram?</h2>
+<p>Each leaf represents one observation. Branches show which groups join. <strong>The height of a merge</strong> indicates the linkage distance (or Ward height) at which it occurred. The left-to-right leaf order does not measure actual Euclidean separation; branches may be rotated without changing the clustering.</p>
+<div class="example"><strong>Interactive exercise:</strong> Open the <a href="../index.html#hier">Hierarchical tab</a> and choose 24 hours. Click <em>Next merge</em> three times. Observe the groups disappear and the corresponding dendrogram branches highlight. Then click <em>Complete tree</em>, choose K = 2, 3, 4, and compare.</div>
+<p>A horizontal cut through the tree produces clusters. <strong>Important:</strong> changing K changes the cut, not the original tree. The nesting is fixed by the chosen distance and linkage.</p>
+<p>Look for large gaps between adjacent merger heights as one possible cut, but do not treat that as a proof of an optimal K.</p>
+
+<h2>5. How do we choose K?</h2>
+<p>The dendrogram is a visual diagnostic. Silhouette analysis adds a quantitative measure previously introduced for K-means. For an observation i, let a(i) be the average distance to points in its <em>own</em> group and b(i) the smallest average distance to points in <em>another</em> group:</p>
+<p class="formula">s(i) = [b(i) − a(i)] / max{a(i), b(i)}.</p>
+<p>Scores approach 1 for points well separated from other groups, 0 for boundary points, and become negative when points are on average closer to a different group. A singleton's silhouette is defined as 0 by convention.</p>
+<p>Calculate mean silhouette for several cuts (K = 2,…,10), and inspect <strong>both</strong> the average-vs-K curve and the per-cluster silhouette profiles. A high average can conceal a small poorly separated group. Silhouette does not necessarily capture stability or domain usefulness.</p>
+
+<h2>6. Distance and scale: apply this to weather</h2>
+<p>The weather dashboard uses hourly model estimates for Charlottesville. In 2D, cloud cover and relative humidity are the distance features; in 3D, precipitation is added. Observations are sampled from the same weather series used in K-means, KNN, and multinomial logit tabs.</p>
+<p><strong>Raw Euclidean:</strong> large numerical scales can dominate. <strong>Z-score Euclidean:</strong> each numeric variable is centered and divided by its population standard deviation. These are modeling choices; standardization is often useful but is not mathematically mandatory.</p>
+<p><strong>Gower dissimilarity:</strong> compare mixed types by averaging normalized numeric differences and categorical mismatches:</p>
+<p class="formula">d<sub>Gower</sub>(i,j) = Σ<sub>v</sub>w<sub>v</sub>δ<sub>ijv</sub> / Σ<sub>v</sub>w<sub>v</sub>.</p>
+<p>For numeric predictors, δ is the absolute difference divided by that variable's range. For nominal variables, δ is 0 on a match and 1 on a mismatch. Missing-value support requires excluding unavailable comparisons from the denominator; this dashboard uses complete cases only.</p>
+<p>The dashboard adds a four-category <strong>daypart</strong> (night, morning, afternoon, evening) solely to demonstrate how categorical features can enter a distance matrix. The plotted 2D axes cannot display daypart, but it still contributes to the clustering.</p>
+<p class="note">Ward's SSE interpretation requires Euclidean feature geometry. Do not feed arbitrary Gower dissimilarities into Ward. Use single, complete, or average linkage for Gower.</p>
+
+<h2>7. How does hierarchical clustering compare to K-means?</h2>
+<table><tr><th>Question</th><th>K-means</th><th>Hierarchical clustering</th></tr>
+<tr><td>When do we choose K?</td><td>Before fitting</td><td>Often after building the tree</td></tr>
+<tr><td>What changes during fitting?</td><td>Centroids and memberships can update repeatedly</td><td>Two clusters merge irreversibly at each step</td></tr>
+<tr><td>Optimization connection?</td><td>Minimizes within-cluster SSE locally</td><td>Ward greedily minimizes SSE increase per merge</td></tr>
+<tr><td>What output helps interpretation?</td><td>Centroids and cluster profiles</td><td>Dendrogram and merge heights</td></tr>
+<tr><td>New observation?</td><td>Assign nearest fitted centroid</td><td>Requires an extra assignment rule or refitting</td></tr></table>
+<p>Both approaches are unsupervised: meaningful-sounding labels such as “rainy hour” are <em>interpretations</em>, not ground truth used to train the clusters.</p>
+
+<h2>8. Python companion and discussion</h2>
+<p>Use <a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/Hierarchical_Clustering_Colab.ipynb">the same classroom notebook prepared for this lecture</a>. It demonstrates <code>scipy.cluster.hierarchy.linkage</code>, <code>dendrogram</code>, <code>fcluster</code>, and <code>sklearn.metrics.silhouette_score</code>, then works through Ward and Gower with explicit numerical calculations.</p>
+<ol><li>Why can single linkage connect two otherwise distinct weather regimes?</li><li>Why does changing the units or scale of precipitation sometimes change the whole tree?</li><li>If Ward and K-means both use SSE, why might their K = 3 memberships disagree?</li><li>Can two choices of K both be defensible? What evidence besides silhouette should matter?</li><li>What happens when a new weather hour arrives after the dendrogram is built?</li></ol>
+<p class="note">These notes preserve and expand the sequence of the accompanying DS 6021 lecture: distance → linkage → dendrogram cut → inconsistency idea → silhouette. Inconsistency compares merge heights to nearby lower-level merges; it is an optional diagnostic, not a separate clustering algorithm.</p>
+<footer>DS 6021 · University of Virginia School of Data Science · Intro to Predictive Modeling. Saved and refreshed weather values are model estimates from Open-Meteo, not independent station records.</footer>
+</main></body></html>
