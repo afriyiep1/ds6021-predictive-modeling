@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Explore KMeans, KNN classification, and multinomial logistic regression using Charlottesville weather. Place centroids, compare decision regions, and inspect held-out errors in 2D and 3D.">
+  <meta name="description" content="Explore KMeans, hierarchical clustering, KNN classification, and multinomial logistic regression using Charlottesville weather. Place centroids, compare decision regions, and inspect held-out errors in 2D and 3D.">
   <title>Weather Learning Lab · DS 6021</title>
   <link rel="stylesheet" href="styles.css?v=20261110b">
   <link rel="stylesheet" href="centroid-controls.css?v=20261110b">
   <link rel="stylesheet" href="selection.css?v=20261115c">
   <link rel="stylesheet" href="supervised.css?v=20261110b">
   <link rel="stylesheet" href="knn-selection.css?v=20261116a">
+  <link rel="stylesheet" href="hierarchical.css?v=20261117b">
   <script defer src="../vendor/plotly.min.js"></script>
   <script defer src="kmeans.js?v=20261110b"></script>
   <script defer src="selection-core.js?v=20261115c"></script>
@@ -19,7 +20,9 @@
   <script defer src="knn-selection-core.js?v=20261116a"></script>
   <script defer src="knn-selection.js?v=20261116a"></script>
   <script defer src="supervised.js?v=20261116a"></script>
-  <script defer src="learning-tabs.js?v=20261110b"></script>
+  <script defer src="hierarchical-core.js?v=20261117b"></script>
+  <script defer src="hierarchical.js?v=20261117b"></script>
+  <script defer src="learning-tabs.js?v=20261117b"></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to the dashboard</a>
@@ -27,11 +30,12 @@
   <main id="main">
     <section class="intro" aria-labelledby="page-title">
       <div class="eyebrow">CLUSTERING &amp; CLASSIFICATION / CHARLOTTESVILLE WEATHER</div>
-      <h1 id="page-title">One dataset. Three ways to learn<span>.</span></h1>
-      <p class="lede">One point is one weather hour. Discover groups with KMeans, then use labeled weather conditions to explore KNN and multinomial logistic regression.</p>
+      <h1 id="page-title">One dataset. Four ways to learn<span>.</span></h1>
+      <p class="lede">One point is one weather hour. Discover groups with KMeans and hierarchical clustering, then use labeled weather conditions to explore KNN and multinomial logistic regression.</p>
       <div class="downloads"><a href="downloads/KMeans_Weather_Notes.pdf">KMeans lecture PDF</a><a href="downloads/KMeans_Weather_Notes.tex">LaTeX source</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/KMeans_Weather_Colab.ipynb" target="_blank" rel="noopener">KMeans in Colab ↗</a><a href="downloads/KMeans_Weather_Colab.ipynb" download>Notebook</a></div>
     </section>
 
+    <div class="hier-links"><a href="downloads/Hierarchical_Clustering_Notes.html">Hierarchical lecture notes</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/Hierarchical_Clustering_Colab.ipynb" target="_blank" rel="noopener">Hierarchical Python notebook ↗</a></div>
     <section class="data-strip" aria-label="Weather dataset">
       <div class="data-copy"><div class="data-title"><span id="data-badge" class="badge">LOADING SNAPSHOT</span><strong>Charlottesville, Virginia</strong></div><p id="data-description">Loading the saved weather hours…</p><p id="data-detail" class="small">Open-Meteo model estimates · timestamps displayed in America/New_York.</p></div>
       <div class="data-actions"><button id="refresh" class="button secondary" disabled>Refresh past 60 days</button><button id="snapshot" class="button quiet" disabled>Use saved snapshot</button><button id="download" class="text-button" disabled>Download active data (CSV)</button></div>
@@ -40,6 +44,7 @@
 
     <div class="learning-tabs" role="tablist" aria-label="Learning method">
       <button id="tab-kmeans" class="learning-tab" type="button" role="tab" aria-selected="true" aria-controls="kmeans-panel" data-learning-mode="kmeans"><span class="tab-kind">UNSUPERVISED</span><strong>KMeans</strong><span>Discover similar hours</span></button>
+      <button id="tab-hier" class="learning-tab" type="button" role="tab" aria-selected="false" aria-controls="hier-panel" tabindex="-1" data-learning-mode="hier"><span class="tab-kind">UNSUPERVISED</span><strong>Hierarchical</strong><span>Build a tree of groups</span></button>
       <button id="tab-knn" class="learning-tab" type="button" role="tab" aria-selected="false" aria-controls="knn-panel" tabindex="-1" data-learning-mode="knn"><span class="tab-kind">SUPERVISED</span><strong>KNN</strong><span>Learn from nearby hours</span></button>
       <button id="tab-logit" class="learning-tab" type="button" role="tab" aria-selected="false" aria-controls="logit-panel" tabindex="-1" data-learning-mode="logit"><span class="tab-kind">SUPERVISED</span><strong>Multinomial logit</strong><span>Learn class probabilities</span></button>
     </div>
@@ -84,6 +89,7 @@
 
     <div id="k-selection"></div>
     </div>
+    <div id="hier-panel" class="learning-panel" role="tabpanel" aria-labelledby="tab-hier" tabindex="0" hidden></div>
     <div id="knn-panel" class="learning-panel" role="tabpanel" aria-labelledby="tab-knn" tabindex="0" hidden></div>
     <div id="logit-panel" class="learning-panel" role="tabpanel" aria-labelledby="tab-logit" tabindex="0" hidden></div>
 
