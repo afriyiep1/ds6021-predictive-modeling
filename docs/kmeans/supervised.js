@@ -3,8 +3,8 @@
 (function () {
   'use strict';
 
-  const COLORS = ['#D09A24', '#477AA8', '#8565A3', '#258779'];
-  const SHORT_NAMES = ['Clear / mainly clear', 'Partly cloudy', 'Overcast', 'Fog / precip.'];
+  const COLORS = ['#D09A24', '#477AA8', '#8565A3'];
+  const SHORT_NAMES = ['Clear / mainly clear', 'Partly cloudy', 'Overcast'];
   const FEATURE_NAMES = { cloud_cover: 'Cloud cover', relative_humidity_2m: 'Humidity', precipitation: 'Precipitation' };
   const FEATURE_UNITS = { cloud_cover: '%', relative_humidity_2m: '%', precipitation: 'mm' };
   const instances = new Map();
@@ -25,8 +25,8 @@
       <section class="sl-intro" aria-labelledby="${mode}-heading">
         <div class="eyebrow">SUPERVISED LEARNING · SAME WEATHER HOURS</div>
         <h2 id="${mode}-heading">${knn ? 'Classify an hour from its neighbors' : 'Classify an hour with multinomial logistic regression'}</h2>
-        <p>Learn the provider’s weather category from cloud cover and humidity${knn ? ', using nearby training hours' : ', using one score for each category'}. Add precipitation to fit in three dimensions. The target comes from the same hour’s weather code; this is classification of current conditions, not a forecast of future weather.</p>
-        <div class="sl-targets" aria-label="Four target categories">${SHORT_NAMES.map((name, i) => `<span><i style="background:${COLORS[i]}"></i>${name}</span>`).join('')}</div>
+        <p>Learn one of three provider weather categories from cloud cover and humidity${knn ? ', using nearby training hours' : ', using one score for each category'}. Add precipitation to fit in three dimensions. The target comes from the same hour’s WMO weather code (0–3); fog and precipitation hours are excluded. This classifies current conditions rather than forecasting future weather.</p>
+        <div class="sl-targets" aria-label="Three target categories">${SHORT_NAMES.map((name, i) => `<span><i style="background:${COLORS[i]}"></i>${name}</span>`).join('')}</div>
       </section>
 
       <section class="sl-setup" aria-label="${knn ? 'KNN' : 'Multinomial logit'} settings">
@@ -72,7 +72,7 @@
             <div class="sl-metric-grid">
               <div title="Fraction of held-out hours assigned the correct provider category."><span>Accuracy</span><strong data-role="accuracy">—</strong></div>
               <div title="Mean recall across the actual categories present in the test set. Each represented category receives equal weight."><span>Balanced accuracy</span><strong data-role="balanced">—</strong></div>
-              <div title="Mean F1 across all four categories, with equal category weights; undefined class F1 is zero."><span>Macro F1</span><strong data-role="f1">—</strong></div>
+              <div title="Mean F1 across all three categories, with equal category weights; undefined class F1 is zero."><span>Macro F1</span><strong data-role="f1">—</strong></div>
               <div title="Average negative log probability assigned to the actual category. Lower is better; confident wrong predictions cost more."><span>Log loss ↓</span><strong data-role="logloss">—</strong></div>
             </div>
             <section class="sl-compare"><h3>Training versus test</h3><div data-role="comparison"></div><p data-role="training-note"></p></section>
@@ -82,10 +82,10 @@
         </div>
 
         <section class="sl-understand">
-          <div><h3>${knn ? 'What changes when k changes?' : 'What does the fitted model learn?'}</h3><p>${knn ? 'A small neighborhood can follow very local patterns. A larger neighborhood averages over more training hours and can smooth away small categories. Compare error rates and the shape of the decision regions, then inspect the minority categories.' : 'Each category gets a linear score. Softmax turns the four scores into probabilities that sum to one; the largest probability determines the prediction. L2 regularization discourages large slopes. The decision regions compare these class scores.'}</p></div>
-          <div><h3>What do the labels mean?</h3><p>The four targets combine the provider’s WMO codes: 0–1 clear/mainly clear, 2 partly cloudy, 3 overcast, and supported fog or precipitation codes. They are supplied labels, not KMeans cluster numbers. They are model-based weather categories, not independent station observations.</p></div>
+          <div><h3>${knn ? 'What changes when k changes?' : 'What does the fitted model learn?'}</h3><p>${knn ? 'A small neighborhood can follow very local patterns. A larger neighborhood averages over more training hours and can smooth away small categories. Compare error rates and the shape of the decision regions, then inspect the minority categories.' : 'Each category gets a linear score. Softmax turns the three scores into probabilities that sum to one; the largest probability determines the prediction. L2 regularization discourages large slopes. The decision regions compare these class scores.'}</p></div>
+          <div><h3>What do the labels mean?</h3><p>The three targets use provider WMO codes: 0–1 clear/mainly clear, 2 partly cloudy, and 3 overcast. Fog and precipitation hours are excluded from both training and test, not relabeled. These are supplied labels, not KMeans clusters; measurements and codes describe the same hour, not independent station observations.</p></div>
         </section>
-        <details class="sl-methods"><summary>Evaluation, ${knn ? 'neighbor rules' : 'coefficients'}, and interpretation details</summary><div data-role="method-detail"></div><p>Both classifier tabs use the same complete UTC days: the earlier 80% train the model and the most recent 20% form the test set. Scaling is fitted on training hours only. Adjacent hours can be related, so this is a temporal holdout rather than a random split of individual hours.</p><p>These variables and the weather-code target describe the same hour and may share definitions. High classification accuracy does not establish future forecasting skill.</p><p>Changing settings after examining these test metrics is exploratory. Formal model tuning needs validation data and a separate final test set.</p><p>Balanced accuracy averages recall over categories present in the evaluated split. Macro F1 averages all four categories, using zero for undefined class F1. Log loss uses natural logarithms and clips probabilities at 10<sup>−15</sup> for numerical evaluation.</p><p>Weather definitions: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo documentation ↗</a>.</p></details>
+        <details class="sl-methods"><summary>Evaluation, ${knn ? 'neighbor rules' : 'coefficients'}, and interpretation details</summary><div data-role="method-detail"></div><p>Both classifier tabs use the same complete UTC days: the earlier 80% train the model and the most recent 20% form the test set. Scaling is fitted on training hours only. Adjacent hours can be related, so this is a temporal holdout rather than a random split of individual hours.</p><p>These variables and the weather-code target describe the same hour and may share definitions. High classification accuracy does not establish future forecasting skill.</p><p>Changing settings after examining these test metrics is exploratory. Formal model tuning needs validation data and a separate final test set.</p><p>Balanced accuracy averages recall over categories present in the evaluated split. Macro F1 averages all three categories, using zero for undefined class F1. Log loss uses natural logarithms and clips probabilities at 10<sup>−15</sup> for numerical evaluation.</p><p>Weather definitions: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo documentation ↗</a>.</p></details>
         ${knn ? '<div id="knn-k-selection"></div>' : ''}
       </section>`;
   }
@@ -263,7 +263,7 @@
   function renderSummary(state) {
     const { prepared, testMetrics: test, trainMetrics: train, model } = state.result;
     const m = prepared.metadata;
-    state.el('split').innerHTML = `<div><b>Train</b><span>${dateUTC(m.trainStart)}–${dateUTC(m.trainEnd)} · ${m.trainDays} UTC days · ${m.trainCount.toLocaleString()} hours</span></div><div><b>Test</b><span>${dateUTC(m.testStart)}–${dateUTC(m.testEnd)} · ${m.testDays} UTC days · ${m.testCount.toLocaleString()} hours</span></div><p>The most recent 20% of complete UTC days are held out. Both classifier tabs use this same split.</p>`;
+    state.el('split').innerHTML = `<div><b>Train</b><span>${dateUTC(m.trainStart)}–${dateUTC(m.trainEnd)} · ${m.trainDays} UTC days · ${m.trainCount.toLocaleString()} hours</span></div><div><b>Test</b><span>${dateUTC(m.testStart)}–${dateUTC(m.testEnd)} · ${m.testDays} UTC days · ${m.testCount.toLocaleString()} hours</span></div><p>The most recent 20% of complete UTC days are held out. Only clear, partly cloudy, and overcast hours enter the models; other conditions do not cause entire days to be discarded. Both classifier tabs use this same split.</p>`;
     state.el('error').textContent = percent(test.error);
     state.el('error-count').textContent = `${test.errors} of ${test.n} test hours assigned the wrong provider category`;
     state.el('accuracy').textContent = percent(test.accuracy);
@@ -300,7 +300,7 @@
   function renderMethods(state) {
     const { prepared, model, testMetrics } = state.result;
     if (state.mode === 'knn') {
-      state.el('method-detail').innerHTML = `<p>KNN uses Euclidean distance in the selected ${state.result.dimensions} features, with uniform neighbor votes. Exact distance ties use the earlier training row; equal vote totals use the first category in the fixed category order. An odd k does not rule out a tie with four categories.</p><p>Here ${testMetrics.clippedTrueProbabilities} test hour${testMetrics.clippedTrueProbabilities === 1 ? ' has' : 's have'} an actual category with zero or numerically tiny predicted probability. Such errors can make KNN log loss much larger than its classification-error percentage.</p>`;
+      state.el('method-detail').innerHTML = `<p>KNN uses Euclidean distance in the selected ${state.result.dimensions} features, with uniform neighbor votes. Exact distance ties use the earlier training row; equal vote totals use the first category in the fixed category order. An odd k does not rule out a tie with three categories.</p><p>Here ${testMetrics.clippedTrueProbabilities} test hour${testMetrics.clippedTrueProbabilities === 1 ? ' has' : 's have'} an actual category with zero or numerically tiny predicted probability. Such errors can make KNN log loss much larger than its classification-error percentage.</p>`;
       return;
     }
     const headers = ['Category', 'Intercept', ...prepared.features.map(key => FEATURE_NAMES[key])];
@@ -353,8 +353,8 @@
     const toXY = point => view ? view.project(point) : point;
     const traces = [];
     if (dimensions === 2) {
-      const scale = COLORS.flatMap((color, c) => [[c / 4, rgba(color, 0.14)], [(c + 1) / 4, rgba(color, 0.14)]]);
-      traces.push({ type: 'heatmap', x: r.regions.x, y: r.regions.y, z: r.regions.z, zmin: -0.5, zmax: 3.5,
+      const scale = COLORS.flatMap((color, c) => [[c / COLORS.length, rgba(color, 0.14)], [(c + 1) / COLORS.length, rgba(color, 0.14)]]);
+      traces.push({ type: 'heatmap', x: r.regions.x, y: r.regions.y, z: r.regions.z, zmin: -0.5, zmax: SHORT_NAMES.length - 0.5,
         colorscale: scale, showscale: false, hoverinfo: 'skip', zsmooth: false, showlegend: false, name: 'Predicted category' });
     } else {
       traces.push({ type: 'scatter', mode: 'lines', x: view.edges.flatMap(edge => [edge[0][0], edge[1][0], null]), y: view.edges.flatMap(edge => [edge[0][1], edge[1][1], null]),
@@ -368,7 +368,7 @@
     }
 
     const labels = showPredicted ? testMetrics.predictions : prepared.test.y;
-    for (let c = 0; c < 4; c++) {
+    for (let c = 0; c < SHORT_NAMES.length; c++) {
       const indices = labels.flatMap((label, i) => label === c ? [i] : []);
       const points = indices.map(i => toXY(prepared.test.X[i]));
       const customdata = indices.map(i => {
