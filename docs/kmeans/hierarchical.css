@@ -1,0 +1,30 @@
+
+/* Fourth learning tab: Hierarchical clustering */
+.learning-tabs{grid-template-columns:repeat(4,minmax(0,1fr))}
+.hier-links{display:flex;gap:18px;flex-wrap:wrap;margin:5px 0 24px;font-size:13px}
+.hier-config{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;border:1px solid #dce1e8;padding:18px;background:#f6f8fb}
+.hier-config label{display:flex;flex-direction:column;gap:7px;font-size:11px;color:#536477;font-weight:600}
+.hier-config select{height:40px;font-size:12px}
+.hier-hint{font-size:11px;color:#5d687b;margin:9px 0 12px;line-height:1.6}
+.hier-progress{display:flex;flex-wrap:wrap;gap:9px;align-items:center;padding:14px 0 8px}
+.hier-progress>span{margin-left:auto;font-size:12px}
+.hier-step{width:100%;accent-color:#232d4b}
+.hier-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#dce1e8;border:1px solid #dce1e8;margin:16px 0}
+.hier-stats>div{background:#f6f8fb;padding:12px 15px;font-size:11px;color:#5d687b}
+.hier-stats strong{display:block;font:500 23px Georgia,serif;color:#232d4b;margin-top:4px}
+.hier-status{font-size:12px;color:#5d687b}
+.hier-merge{padding:14px 18px;background:#f6f8fb;border-left:3px solid #e57200;font-size:13px;margin-bottom:16px}
+.hier-plots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.hier-plots>section{border:1px solid #dce1e8;padding:15px;min-width:0}
+.hier-plots h3{font-size:13px;font-weight:650;margin:0 0 8px}
+.hier-plot{width:100%;height:385px;min-width:0}
+.hier-short{height:300px}
+.hier-kbar{display:flex;justify-content:space-between;align-items:center;gap:25px;padding:24px 0 10px}
+.hier-kbar label{display:flex;flex-direction:column;gap:7px;flex:1;font-size:13px;font-weight:600}
+.hier-kbar input{width:100%;accent-color:#232d4b}
+.hier-kbar>div{font-size:12px;color:#5d687b}
+.hier-bottom{margin-top:12px}
+.hier-teaching{display:grid;grid-template-columns:1fr 1fr;gap:36px;border-top:1px solid #dce1e8;margin-top:24px;padding-top:24px;font-size:13px;color:#5d687b;line-height:1.7}
+.hier-teaching h3{color:#232d4b;font:500 24px Georgia,serif}
+@media(max-width:1000px){.hier-config{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:720px){.learning-tab{padding:12px 7px}.learning-tab strong{font-size:16px}.learning-tab>span:last-child{font-size:9px}.hier-plots,.hier-teaching{grid-template-columns:1fr}.hier-config{grid-template-columns:repeat(2,1fr)}.hier-stats{grid-template-columns:repeat(2,1fr)}.hier-plot{height:350px}.hier-kbar{display:block}}
