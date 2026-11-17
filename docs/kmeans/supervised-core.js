@@ -11,16 +11,16 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const CLASS_NAMES = Object.freeze(['Clear / mainly clear', 'Partly cloudy', 'Overcast']);
+  const CLASS_NAMES = Object.freeze(['Clear sky', 'Mainly / partly cloudy', 'Overcast']);
   const FEATURES_2D = Object.freeze(['cloud_cover', 'relative_humidity_2m']);
-  const FEATURES_3D = Object.freeze([...FEATURES_2D, 'temperature_2m']); // precipitation is constant among WMO clear/partly cloudy/overcast hours
+  const FEATURES_3D = Object.freeze([...FEATURES_2D, 'temperature_2m']); // precipitation is constant among these dry-weather classes
   const WET_CODES = new Set([45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 97, 99]);
   const LOG_LOSS_EPSILON = 1e-15;
 
   function classForWeatherCode(code) {
     if (!Number.isInteger(code)) return null;
-    if (code === 0 || code === 1) return 0;
-    if (code === 2) return 1;
+    if (code === 0) return 0;
+    if (code === 1 || code === 2) return 1;
     if (code === 3) return 2;
     // Other conditions (fog, rain, snow, thunderstorms) are outside this three-class task.
     return null;
@@ -87,7 +87,7 @@
     const nTrainDays = Math.max(1, Math.min(completeDays.length - 1, Math.floor(completeDays.length * (1 - testFraction))));
     const trainItems = completeDays.slice(0, nTrainDays).flatMap(day => days.get(day)).filter(item => item.label !== null);
     const testItems = completeDays.slice(nTrainDays).flatMap(day => days.get(day)).filter(item => item.label !== null);
-    if (!trainItems.length || !testItems.length) throw new Error('The chronological train/test split needs at least one clear, partly cloudy, or overcast hour in each portion.');
+    if (!trainItems.length || !testItems.length) throw new Error('The chronological train/test split needs at least one clear, mainly/partly cloudy, or overcast hour in each portion.');
     const rawTrain = trainItems.map(item => features.map(key => item.row[key]));
     const mean = features.map((_, j) => rawTrain.reduce((sum, row) => sum + row[j], 0) / rawTrain.length);
     const deviations = mean.map((average, j) => Math.sqrt(rawTrain.reduce((sum, row) => sum + (row[j] - average) ** 2, 0) / rawTrain.length));
@@ -125,7 +125,7 @@
       droppedRows: rows.length - train.rows.length - test.rows.length,
       omissions, unknownCodes: [...unknownCodes],
       missingTrainClasses, missingTestClasses, constantFeatures,
-      target: 'Same-hour provider codes 0–1 (clear/mainly clear), 2 (partly cloudy), 3 (overcast). Fog and precipitation are excluded. Not a future-weather forecast.',
+      target: 'Same-hour provider codes 0 (clear sky), 1–2 (mainly/partly cloudy), 3 (overcast). Fog and precipitation are excluded. Not a future-weather forecast.',
       targetSource: 'Open-Meteo WMO weather codes', targetSourceUrl: 'https://open-meteo.com/en/docs'
     } };
   }
