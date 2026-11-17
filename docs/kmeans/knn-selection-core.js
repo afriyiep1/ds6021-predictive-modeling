@@ -14,14 +14,14 @@
     if (!p || !X.every(row => Array.isArray(row) && row.length === p && row.every(Number.isFinite))) {
       throw new Error(`${name[0].toUpperCase() + name.slice(1)} predictors must have consistent finite coordinates.`);
     }
-    if (!y.every(label => Number.isInteger(label) && label >= 0 && label < 4)) {
-      throw new Error(`${name[0].toUpperCase() + name.slice(1)} labels must be class IDs 0 through 3.`);
+    if (!y.every(label => Number.isInteger(label) && label >= 0 && label < Core.CLASS_NAMES.length)) {
+      throw new Error(`${name[0].toUpperCase() + name.slice(1)} labels must be class IDs 0 through '${Core.CLASS_NAMES.length - 1}'.`);
     }
     return p;
   }
 
   function support(y) {
-    const counts = [0, 0, 0, 0];
+    const counts = Array(Core.CLASS_NAMES.length).fill(0);
     y.forEach(label => counts[label]++);
     return counts;
   }
@@ -38,14 +38,14 @@
     const maxK = Math.min(requestedMaxK, trainX.length);
     const testSupport = support(testY);
     const representedClasses = testSupport.flatMap((count, label) => count > 0 ? [label] : []);
-    const correctByK = Array.from({ length: maxK }, () => [0, 0, 0, 0]);
+    const correctByK = Array.from({ length: maxK }, () => Array(Core.CLASS_NAMES.length).fill(0));
     const model = Core.fitKNN(trainX, trainY, { k: maxK });
     const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
     if (onProgress) onProgress({ completed: 0, total: testX.length });
 
     for (let i = 0; i < testX.length; i++) {
       const neighbors = Core.nearestNeighbors(model, testX[i]);
-      const votes = [0, 0, 0, 0];
+      const votes = Array(Core.CLASS_NAMES.length).fill(0);
       for (let j = 0; j < maxK; j++) {
         if (!Number.isFinite(neighbors[j].distance2)) throw new Error('The feature values are too large to calculate finite neighbor distances.');
         votes[neighbors[j].label]++;
