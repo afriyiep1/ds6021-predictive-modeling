@@ -4,7 +4,7 @@
   'use strict';
 
   const COLORS = ['#D09A24', '#477AA8', '#8565A3'];
-  const SHORT_NAMES = ['Clear / mainly clear', 'Partly cloudy', 'Overcast'];
+  const SHORT_NAMES = ['Clear sky', 'Mainly / partly cloudy', 'Overcast'];
   const FEATURE_NAMES = { cloud_cover: 'Cloud cover', relative_humidity_2m: 'Humidity', precipitation: 'Precipitation', temperature_2m: 'Temperature' };
   const FEATURE_UNITS = { cloud_cover: '%', relative_humidity_2m: '%', precipitation: 'mm', temperature_2m: '°C' };
   const instances = new Map();
@@ -83,7 +83,7 @@
 
         <section class="sl-understand">
           <div><h3>${knn ? 'What changes when k changes?' : 'What does the fitted model learn?'}</h3><p>${knn ? 'A small neighborhood can follow very local patterns. A larger neighborhood averages over more training hours and can smooth away small categories. Compare error rates and the shape of the decision regions, then inspect the minority categories.' : 'Each category gets a linear score. Softmax turns the three scores into probabilities that sum to one; the largest probability determines the prediction. L2 regularization discourages large slopes. The decision regions compare these class scores.'}</p></div>
-          <div><h3>What do the labels mean?</h3><p>The three targets use provider WMO codes: 0–1 clear/mainly clear, 2 partly cloudy, and 3 overcast. Fog and precipitation hours are excluded from both training and test, not relabeled. These are supplied labels, not KMeans clusters; measurements and codes describe the same hour, not independent station observations.</p></div>
+          <div><h3>What do the labels mean?</h3><p>The three targets use provider WMO codes: 0 for clear sky, 1–2 for mainly / partly cloudy, and 3 for overcast. Fog and precipitation hours are excluded from both training and test, not relabeled. These are supplied labels, not KMeans clusters; measurements and codes describe the same hour, not independent station observations.</p></div>
         </section>
         <details class="sl-methods"><summary>Evaluation, ${knn ? 'neighbor rules' : 'coefficients'}, and interpretation details</summary><div data-role="method-detail"></div><p>Both classifier tabs use the same complete UTC days: the earlier 80% train the model and the most recent 20% form the test set. Scaling is fitted on training hours only. Adjacent hours can be related, so this is a temporal holdout rather than a random split of individual hours.</p><p>These variables and the weather-code target describe the same hour and may share definitions. High classification accuracy does not establish future forecasting skill.</p><p>Changing settings after examining these test metrics is exploratory. Formal model tuning needs validation data and a separate final test set.</p><p>Balanced accuracy averages recall over categories present in the evaluated split. Macro F1 averages all three categories, using zero for undefined class F1. Log loss uses natural logarithms and clips probabilities at 10<sup>−15</sup> for numerical evaluation.</p><p>Weather definitions: <a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo documentation ↗</a>.</p></details>
         ${knn ? '<div id="knn-k-selection"></div>' : ''}
