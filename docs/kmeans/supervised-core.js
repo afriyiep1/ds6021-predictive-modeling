@@ -13,7 +13,7 @@
 
   const CLASS_NAMES = Object.freeze(['Clear / mainly clear', 'Partly cloudy', 'Overcast']);
   const FEATURES_2D = Object.freeze(['cloud_cover', 'relative_humidity_2m']);
-  const FEATURES_3D = Object.freeze([...FEATURES_2D, 'precipitation']);
+  const FEATURES_3D = Object.freeze([...FEATURES_2D, 'temperature_2m']); // precipitation is constant among WMO clear/partly cloudy/overcast hours
   const WET_CODES = new Set([45, 48, 51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 71, 73, 75, 77, 80, 81, 82, 85, 86, 95, 96, 97, 99]);
   const LOG_LOSS_EPSILON = 1e-15;
 
