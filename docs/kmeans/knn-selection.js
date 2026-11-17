@@ -3,7 +3,7 @@
   'use strict';
   const scriptURL = document.currentScript && document.currentScript.src || location.href;
   const workerURL = new URL('knn-selection-worker.js?v=20261117c', scriptURL).href;
-  const names = { cloud_cover: 'cloud cover', relative_humidity_2m: 'humidity', precipitation: 'precipitation' };
+  const names = { cloud_cover: 'cloud cover', relative_humidity_2m: 'humidity', precipitation: 'precipitation', temperature_2m: 'temperature' };
   const percent = value => Number.isFinite(value) ? `${(100 * value).toFixed(1)}%` : '—';
   const state = { mount: null, active: false, context: null, signature: null, result: null,
     requestedMax: 50, mainK: 15, inspectedK: 15, requestId: 0, worker: null, timer: null,
