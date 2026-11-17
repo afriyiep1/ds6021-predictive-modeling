@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  const modes = ['kmeans', 'knn', 'logit'];
+  const modes = ['kmeans', 'hier', 'knn', 'logit'];
   const buttons = modes.map(mode => document.getElementById(`tab-${mode}`));
   ['knn', 'logit'].forEach(mode => window.SupervisedLab.mount({ mode, container: document.getElementById(`${mode}-panel`) }));
 
