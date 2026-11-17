@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const scriptURL = document.currentScript && document.currentScript.src || location.href;
-  const workerURL = new URL('knn-selection-worker.js?v=20261116a', scriptURL).href;
+  const workerURL = new URL('knn-selection-worker.js?v=20261117c', scriptURL).href;
   const names = { cloud_cover: 'cloud cover', relative_humidity_2m: 'humidity', precipitation: 'precipitation' };
   const percent = value => Number.isFinite(value) ? `${(100 * value).toFixed(1)}%` : '—';
   const state = { mount: null, active: false, context: null, signature: null, result: null,
@@ -112,7 +112,8 @@
     el('knn-curve-inspect').disabled = false;
     if (!selectedResult()) state.inspectedK = state.mainK <= result.maxK ? state.mainK : 1;
     const represented = result.representedClasses.length;
-    const missing = represented < 4 ? ` Only ${represented} of the four weather categories occur in test; the score averages those ${represented} recalls.` : '';
+    const totalClasses = window.WeatherSupervised.CLASS_NAMES.length;
+    const missing = represented < totalClasses ? ` Only ${represented} of the ${totalClasses} weather categories occur in test; the score averages those ${represented} recalls.` : '';
     el('knn-curve-status').textContent = `Compared every k from 1 to ${result.maxK} on the same ${result.testCount.toLocaleString()} held-out hours.${missing}`;
     updateControls(); render();
   }
