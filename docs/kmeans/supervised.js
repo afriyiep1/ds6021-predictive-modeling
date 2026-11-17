@@ -5,8 +5,8 @@
 
   const COLORS = ['#D09A24', '#477AA8', '#8565A3'];
   const SHORT_NAMES = ['Clear / mainly clear', 'Partly cloudy', 'Overcast'];
-  const FEATURE_NAMES = { cloud_cover: 'Cloud cover', relative_humidity_2m: 'Humidity', precipitation: 'Precipitation' };
-  const FEATURE_UNITS = { cloud_cover: '%', relative_humidity_2m: '%', precipitation: 'mm' };
+  const FEATURE_NAMES = { cloud_cover: 'Cloud cover', relative_humidity_2m: 'Humidity', precipitation: 'Precipitation', temperature_2m: 'Temperature' };
+  const FEATURE_UNITS = { cloud_cover: '%', relative_humidity_2m: '%', precipitation: 'mm', temperature_2m: '°C' };
   const instances = new Map();
   const escapeHTML = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const number = (value, digits = 2) => Number.isFinite(value) ? value.toLocaleString('en-US', { maximumFractionDigits: digits, minimumFractionDigits: digits }) : '—';
@@ -25,13 +25,13 @@
       <section class="sl-intro" aria-labelledby="${mode}-heading">
         <div class="eyebrow">SUPERVISED LEARNING · SAME WEATHER HOURS</div>
         <h2 id="${mode}-heading">${knn ? 'Classify an hour from its neighbors' : 'Classify an hour with multinomial logistic regression'}</h2>
-        <p>Learn one of three provider weather categories from cloud cover and humidity${knn ? ', using nearby training hours' : ', using one score for each category'}. Add precipitation to fit in three dimensions. The target comes from the same hour’s WMO weather code (0–3); fog and precipitation hours are excluded. This classifies current conditions rather than forecasting future weather.</p>
+        <p>Learn one of three provider weather categories from cloud cover and humidity${knn ? ', using nearby training hours' : ', using one score for each category'}. Add temperature for a third useful predictor (precipitation is zero for these three weather codes). The target comes from the same hour’s WMO weather code (0–3); fog and precipitation hours are excluded. This classifies current conditions rather than forecasting future weather.</p>
         <div class="sl-targets" aria-label="Three target categories">${SHORT_NAMES.map((name, i) => `<span><i style="background:${COLORS[i]}"></i>${name}</span>`).join('')}</div>
       </section>
 
       <section class="sl-setup" aria-label="${knn ? 'KNN' : 'Multinomial logit'} settings">
         <div class="sl-settings">
-          <label class="sl-setting sl-wide">Predictors<select data-role="dimensions"><option value="2">2D · cloud cover + humidity</option><option value="3">3D · add precipitation</option></select></label>
+          <label class="sl-setting sl-wide">Predictors<select data-role="dimensions"><option value="2">2D · cloud cover + humidity</option><option value="3">3D · add temperature</option></select></label>
           ${knn ? '<label class="sl-setting">Neighbors, k<input data-role="k" type="number" min="1" max="1152" step="1" value="15"><small>Every neighbor has one vote</small></label>' : '<label class="sl-setting">L2 regularization<select data-role="lambda"><option value="0.0001">Very weak · λ = 0.0001</option><option value="0.001">Weak · λ = 0.001</option><option value="0.01" selected>Moderate · λ = 0.01</option><option value="0.1">Strong · λ = 0.1</option><option value="1">Very strong · λ = 1</option></select><small>Larger λ shrinks slopes more</small></label>'}
           <label class="sl-check"><input data-role="standardize" type="checkbox" checked><span>Standardize features<small>Using training hours only</small></span></label>
           <button data-role="fit" class="button primary">Fit &amp; evaluate</button>
@@ -291,7 +291,7 @@
       ? model.intercepts[c] + model.coefficients[c].reduce((sum, beta, j) => sum + beta * prepared.test.X[i][j], 0) : null;
     state.el('selection').innerHTML = `
       <p class="sl-selected-time">${dateLocal(row.time)} <span>Held-out test hour</span></p>
-      <div class="sl-hour-values"><span>Cloud <b>${number(row.cloud_cover, 0)}%</b></span><span>Humidity <b>${number(row.relative_humidity_2m, 0)}%</b></span><span>Precipitation <b>${number(row.precipitation, 2)} mm</b>${state.result.dimensions === 2 ? ' <small>(context only)</small>' : ''}</span></div>
+      <div class="sl-hour-values"><span>Cloud <b>${number(row.cloud_cover, 0)}%</b></span><span>Humidity <b>${number(row.relative_humidity_2m, 0)}%</b></span><span>Temperature <b>${number(row.temperature_2m, 1)} °C</b>${state.result.dimensions === 2 ? ' <small>(context only)</small>' : ''}</span><span>Precipitation <b>${number(row.precipitation, 2)} mm</b> <small>(context only)</small></span></div>
       <div class="sl-actual-predicted"><p><span>Actual provider category</span><strong>${escapeHTML(prepared.classNames[actual])}</strong></p><p><span>Model prediction</span><strong>${escapeHTML(prepared.classNames[predicted])}</strong><em class="${actual === predicted ? 'sl-correct' : 'sl-wrong'}">${actual === predicted ? 'Correct' : 'Incorrect'}</em></p></div>
       <div class="sl-table-scroll"><table class="sl-probabilities"><thead><tr><th scope="col">Category</th><th scope="col">${knn ? 'Neighbor votes' : 'Class score'}</th><th scope="col">Probability</th></tr></thead><tbody>${prepared.classNames.map((name, c) => `<tr><th scope="row"><i class="sl-class-dot" style="background:${COLORS[c]}"></i>${escapeHTML(name)}${c === actual ? '<small>Actual</small>' : ''}</th><td>${knn ? `${Math.round(probabilities[c] * model.k)} / ${model.k}` : number(score(c), 3)}</td><td><div class="sl-probability-value"><span class="sl-probability-track"><i style="width:${100 * probabilities[c]}%;background:${COLORS[c]}"></i></span><b>${percent(probabilities[c])}</b></div></td></tr>`).join('')}</tbody></table></div>
       <p class="sl-inspect-note">${knn ? `The ${model.k} closest training hours vote. The largest vote share wins; exact vote ties use the first category in the fixed category order.` : 'Softmax converts all class scores together into probabilities. The largest probability wins; there is no separate 0.5 cutoff for each category.'}</p>`;
@@ -373,11 +373,11 @@
       const points = indices.map(i => toXY(prepared.test.X[i]));
       const customdata = indices.map(i => {
         const row = prepared.test.rows[i];
-        return [i, 'test', dateLocal(row.time), prepared.classNames[prepared.test.y[i]], prepared.classNames[testMetrics.predictions[i]], row.cloud_cover, row.relative_humidity_2m, row.precipitation, percent(Math.max(...testProba[i]))];
+        return [i, 'test', dateLocal(row.time), prepared.classNames[prepared.test.y[i]], prepared.classNames[testMetrics.predictions[i]], row.cloud_cover, row.relative_humidity_2m, row.precipitation, row.temperature_2m, percent(Math.max(...testProba[i]))];
       });
       traces.push({ type: 'scatter', mode: 'markers', x: points.map(p => p[0]), y: points.map(p => p[1]), customdata,
         name: SHORT_NAMES[c], legendgroup: String(c), marker: { color: COLORS[c], size: 7, opacity: 0.85, line: { color: '#fff', width: 0.5 } },
-        hovertemplate: '<b>%{customdata[2]}</b><br>Actual: %{customdata[3]}<br>Predicted: %{customdata[4]}<br>Cloud: %{customdata[5]:.0f}% · humidity: %{customdata[6]:.0f}%<br>Precipitation: %{customdata[7]:.2f} mm<br>Largest probability: %{customdata[8]}<extra></extra>' });
+        hovertemplate: '<b>%{customdata[2]}</b><br>Actual: %{customdata[3]}<br>Predicted: %{customdata[4]}<br>Cloud: %{customdata[5]:.0f}% · humidity: %{customdata[6]:.0f}%<br>Temperature: %{customdata[8]:.1f} °C<br>Precipitation: %{customdata[7]:.2f} mm (context only)<br>Largest probability: %{customdata[9]}<extra></extra>' });
     }
 
     const errors = testMetrics.predictions.flatMap((predicted, i) => predicted !== prepared.test.y[i] ? [i] : []);
