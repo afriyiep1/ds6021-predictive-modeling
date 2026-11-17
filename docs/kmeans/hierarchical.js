@@ -50,7 +50,7 @@ function showOptions(){
  const g=el("metric").value==="gower",ward=el("linkage").querySelector('[value="ward"]');
  ward.disabled=g;if(g&&el("linkage").value==="ward")el("linkage").value="average";
  el("scale").disabled=g;
- el("scale-note").textContent=g?"Gower uses normalized numeric differences plus a categorical daypart (night/morning/afternoon/evening). Ward is not defined for this dissimilarity.":"Use raw or standardized Euclidean distance. Raw precipitation (mm) may contribute less than cloud cover (%) due to its scale.";
+ el("scale-note").textContent=g?"Gower computes distances from range-normalized numeric values plus categorical daypart; the scatter shows numeric weather values in original units. Ward is unavailable.":(el("scale").value==="standardized"?"Z-score axes now display the exact standardized coordinates used in the Euclidean distances (mean 0, standard deviation 1 within the selected sample).":"Raw axes display original measurement units, which also determine Euclidean distances. Large-scale variables may dominate.");
 }
 function rebuild(){
  if(!active)return;
@@ -70,15 +70,23 @@ function rebuild(){
 }
 function renderScatter(){
  const {rows,keys}=fit.p,n=fit.n,{clusters}=Core.labelsAt(fit,n-step),is3=keys.length===3;
- const xs=rows.map(r=>Number(r.cloud_cover)),ys=rows.map(r=>Number(r.relative_humidity_2m)),zs=rows.map(r=>Number(r.precipitation));
+ // For Euclidean the scatter uses the exact fitted coordinates (raw or z-scores).
+ // Gower includes a categorical daypart; plot raw numeric units for interpretability.
+ const euclidean=fit.metric==="euclidean", standardized=euclidean&&el("scale").value==="standardized";
+ const xs=euclidean?fit.p.points.map(p=>p[0]):rows.map(r=>Number(r.cloud_cover));
+ const ys=euclidean?fit.p.points.map(p=>p[1]):rows.map(r=>Number(r.relative_humidity_2m));
+ const zs=euclidean&&is3?fit.p.points.map(p=>p[2]):rows.map(r=>Number(r.precipitation));
+ const xTitle="Cloud cover ("+(standardized?"z-score":"%")+")", yTitle="Humidity ("+(standardized?"z-score":"%")+")", zTitle="Precipitation ("+(standardized?"z-score":"mm")+")";
  const traces=clusters.map((indices,c)=>{
   const tr={type:is3?"scatter3d":"scatter",mode:"markers",name:"Group "+(c+1),x:indices.map(i=>xs[i]),y:indices.map(i=>ys[i]),
-   marker:{size:is3?5:8,color:colors[c%colors.length],opacity:.85},text:indices.map(i=>new Date(Number(rows[i].time)*1000).toLocaleString("en-US",{timeZone:"America/New_York"})+" · precipitation "+zs[i].toFixed(1)+" mm"),hovertemplate:"%{text}<br>Cloud: %{x:.1f}%<br>Humidity: %{y:.1f}%<extra></extra>"};
+   marker:{size:is3?5:8,color:colors[c%colors.length],opacity:.85},
+   text:indices.map(i=>new Date(Number(rows[i].time)*1000).toLocaleString("en-US",{timeZone:"America/New_York"})+"<br>Raw cloud "+Number(rows[i].cloud_cover).toFixed(1)+"% · humidity "+Number(rows[i].relative_humidity_2m).toFixed(1)+"% · precipitation "+Number(rows[i].precipitation).toFixed(2)+" mm"),
+   hovertemplate:"%{text}<br>Plotted cloud: %{x:.2f}<br>Plotted humidity: %{y:.2f}"+(is3?"<br>Plotted precipitation: %{z:.2f}":"")+"<extra></extra>"};
   if(is3)tr.z=indices.map(i=>zs[i]);return tr;
  });
  const lay={margin:{l:56,r:10,b:48,t:10},showlegend:clusters.length<=7,legend:{orientation:"h",y:-.25,font:{size:10}},paper_bgcolor:"#fff",plot_bgcolor:"#fff",
-  font:{size:11},xaxis:{title:"Cloud cover (%)"},yaxis:{title:"Humidity (%)"}};
- if(is3){lay.margin={l:0,r:0,t:0,b:0};lay.scene={xaxis:{title:"Cloud cover (%)"},yaxis:{title:"Humidity (%)"},zaxis:{title:"Precipitation (mm)"}};delete lay.xaxis;delete lay.yaxis;}
+  font:{size:11},xaxis:{title:xTitle},yaxis:{title:yTitle}};
+ if(is3){lay.margin={l:0,r:0,t:0,b:0};lay.scene={xaxis:{title:xTitle},yaxis:{title:yTitle},zaxis:{title:zTitle}};delete lay.xaxis;delete lay.yaxis;}
  return Plotly.react(el("scatter"),traces,lay,{responsive:true,displaylogo:false});
 }
 function renderTree(){
@@ -122,7 +130,7 @@ function render(){
  el("chosen").textContent="K = "+k+" · "+s.negative+" negative silhouettes";
  el("merge-message").textContent=last?"Merge "+step+": groups of "+last.leftMembers.length+" and "+last.rightMembers.length+" observations merged at height "+number(last.height)+".": "Initially each sampled hour is its own cluster. Click Next merge to build the hierarchy.";
  el("height-note").textContent=fit.method==="ward"?"Ward's displayed height is √(2 × increase in within-cluster SSE).":"Height gives the "+fit.method+" linkage distance at which two groups merge.";
- el("distance-note").textContent=fit.metric==="gower"?"Gower: equal contributions from normalized numeric features and the categorical daypart.":"Euclidean distances calculated on "+(el("scale").value==="raw"?"raw measurements.":"z-scores.") ;
+ el("distance-note").textContent=fit.metric==="gower"?"Gower: equal contributions from normalized numeric features and categorical daypart. The scatter displays raw numeric units.":"Euclidean distances and scatter axes use the same "+(el("scale").value==="raw"?"raw measurements.":"z-score coordinates.") ;
  renderScatter();renderTree();renderScores();renderProfile();
 }
 function activate(on){active=on;if(!on)return;setData(getData());if(dirty||!fit)rebuild();else render();}
