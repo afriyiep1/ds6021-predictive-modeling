@@ -123,7 +123,7 @@ function renderProfile(){
 function selectedWeatherProfiles(){
  const {clusters}=Core.labelsAt(fit,+el("k").value),rows=fit.p.rows;
  const mean=(members,key)=>{
-  const nums=members.map(i=>Number(rows[i][key])).filter(Number.isFinite);
+  const nums=members.map(i=>rows[i][key]).filter(value=>value!==null&&value!==undefined&&value!=="").map(Number).filter(Number.isFinite);
   return nums.length?nums.reduce((sum,x)=>sum+x,0)/nums.length:null;
  };
  const providerLabel=code=>code===0?"Clear sky":(code===1||code===2)?"Mainly / partly cloudy":code===3?"Overcast":Number.isInteger(code)?"Other weather (e.g. fog / precipitation)":"Unknown code";
@@ -137,7 +137,7 @@ function selectedWeatherProfiles(){
   const cloudValues=members.map(i=>Number(rows[i].cloud_cover));
   const wideSky=Math.max(...cloudValues)-Math.min(...cloudValues)>=60;
   const providers=new Map();
-  members.forEach(i=>{const name=providerLabel(Number(rows[i].weather_code));providers.set(name,(providers.get(name)||0)+1);});
+  members.forEach(i=>{const code=rows[i].weather_code;const name=providerLabel(code===null||code===undefined?NaN:Number(code));providers.set(name,(providers.get(name)||0)+1);});
   const common=[...providers].sort((a,b)=>b[1]-a[1])[0];
   let daypart=null;
   if(fit.metric==="gower"){
@@ -163,7 +163,7 @@ function renderWeatherProfiles(){
   '<h4>',p.title,'</h4>',
   '<p class="hier-profile-summary">',p.summary,'</p>',
   '<div class="hier-profile-values"><div>Mean cloud cover<strong>',fmt(p.cloud),'%</strong></div><div>Mean relative humidity<strong>',fmt(p.humidity),'%</strong></div><div>Mean precipitation<strong>',fmt(p.precipitation,2),' mm</strong></div><div>Hours with precipitation<strong>',pct(p.wetFraction),'</strong></div></div>',
-  '<p class="hier-profile-extra">Mean temperature: ',fmt(p.temperature),'°C (context only)</p>',
+  Number.isFinite(p.temperature)?'<p class="hier-profile-extra">Mean temperature: '+fmt(p.temperature)+'°C (context only)</p>':'',
   p.daypart?'<p class="hier-profile-extra">Most common daypart: '+p.daypart.label+' ('+pct(p.daypart.fraction)+')</p>':'',
   p.provider?'<p class="hier-profile-provider">Most frequent observed weather code group: <strong>'+p.provider.label+'</strong> ('+pct(p.provider.fraction)+')</p>':'',
   '</article>'
