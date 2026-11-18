@@ -21,7 +21,7 @@ host.innerHTML=[
 '<div class="hier-merge" data-h="merge-message"></div>',
 '<div class="hier-plots"><section><h3>1 · Watch groups merge</h3><div class="hier-plot" data-h="scatter"></div><p class="hier-hint">Colors represent the groups at the current step.</p></section><section><h3>2 · Read the dendrogram</h3><div class="hier-plot" data-h="tree"></div><p class="hier-hint" data-h="height-note"></p></section></div>',
 '<div class="hier-kbar"><label>3 · Cut the full hierarchy at K = <strong data-h="k-label">3</strong><input data-h="k" type="range" min="2" max="10" value="3"></label><div data-h="chosen"></div></div>',
-'<div class="hier-plots hier-bottom"><section><h3>Average silhouette vs. K</h3><div class="hier-plot hier-short" data-h="scores"></div></section><section><h3>Silhouette profiles for selected K</h3><div class="hier-plot hier-short" data-h="profile"></div></section></div>',
+'<section class="hier-interpret" aria-labelledby="hier-interpret-title"><div class="hier-interpret-heading"><div><h3 id="hier-interpret-title">Weather descriptions of the selected clusters</h3><p class="hier-hint">Summaries of the K groups created by the dendrogram cut, using original weather measurements.</p></div><button class="button secondary" type="button" data-h="show-cut">Show selected K in scatterplot</button></div><p class="hier-interpret-state" data-h="profile-context" role="status"></p><div class="hier-profile-grid" data-h="profiles" role="list"></div><p class="hier-hint">Descriptions summarize the weather measurements, not official cluster names. Provider weather codes are shown only after clustering and never used to form the groups. Temperature is context only.</p></section><div class="hier-plots hier-bottom"><section><h3>Average silhouette vs. K</h3><div class="hier-plot hier-short" data-h="scores"></div></section><section><h3>Silhouette profiles for selected K</h3><div class="hier-plot hier-short" data-h="profile"></div></section></div>',
 '<div class="hier-teaching"><div><h3>Why linkage matters</h3><p><strong>Single:</strong> shortest distance between any two points in different groups; can create chains. <strong>Complete:</strong> longest cross-group distance; tends to form compact groups. <strong>Average:</strong> mean cross-group distance. <strong>Ward:</strong> merges that cause the smallest increase in within-group SSE.</p><p>Unlike K-means, hierarchical clustering builds the entire nested tree before you choose K. Previously merged groups never split apart.</p></div><div><h3>What do weather groups mean?</h3><p>Check whether clusters reflect cloudiness, humidity, and precipitation. The algorithm never sees official weather labels. Try raw versus standardized Euclidean geometry, then Gower with the categorical time-of-day feature.</p><p class="hier-hint" data-h="distance-note"></p><p class="hier-hint">For classroom performance this display selects evenly spaced complete hours from the same 60-day model-estimated weather dataset as the other tabs. The sampled hours are not independent observations.</p></div></div>'
 ].join("");
 const el=role=>host.querySelector('[data-h="'+role+'"]');
@@ -119,6 +119,57 @@ function renderProfile(){
  return Plotly.react(el("profile"),traces,{paper_bgcolor:"#fff",plot_bgcolor:"#fff",margin:{l:55,r:12,b:45,t:8},height:300,
  font:{size:10},showlegend:k<=6,legend:{orientation:"h",y:-.3,font:{size:9}},xaxis:{title:"Silhouette",range:[-1,1],zeroline:true},yaxis:{showticklabels:fit.n<=24}},{responsive:true,displaylogo:false});
 }
+
+function selectedWeatherProfiles(){
+ const {clusters}=Core.labelsAt(fit,+el("k").value),rows=fit.p.rows;
+ const mean=(members,key)=>{
+  const nums=members.map(i=>Number(rows[i][key])).filter(Number.isFinite);
+  return nums.length?nums.reduce((sum,x)=>sum+x,0)/nums.length:null;
+ };
+ const providerLabel=code=>code===0?"Clear sky":(code===1||code===2)?"Mainly / partly cloudy":code===3?"Overcast":Number.isInteger(code)?"Other weather (e.g. fog / precipitation)":"Unknown code";
+ const skyLabel=cloud=>cloud<20?"Mostly clear":cloud<45?"Mainly / partly cloudy":cloud<75?"Mostly cloudy":"Overcast-like";
+ const humidityLabel=h=>h<45?"lower humidity":h<65?"moderate humidity":h<80?"humid":"very humid";
+ const timeLabels=["Night (00–06)","Morning (06–12)","Afternoon (12–18)","Evening (18–24)"];
+ return clusters.map((members,index)=>{
+  const cloud=mean(members,"cloud_cover"),humidity=mean(members,"relative_humidity_2m");
+  const precipitation=mean(members,"precipitation"),temperature=mean(members,"temperature_2m");
+  const wet=members.filter(i=>Number(rows[i].precipitation)>0).length;
+  const cloudValues=members.map(i=>Number(rows[i].cloud_cover));
+  const wideSky=Math.max(...cloudValues)-Math.min(...cloudValues)>=60;
+  const providers=new Map();
+  members.forEach(i=>{const name=providerLabel(Number(rows[i].weather_code));providers.set(name,(providers.get(name)||0)+1);});
+  const common=[...providers].sort((a,b)=>b[1]-a[1])[0];
+  let daypart=null;
+  if(fit.metric==="gower"){
+   const counts=[0,0,0,0];
+   members.forEach(i=>{const d=fit.p.points[i].at(-1);if(Number.isInteger(d)&&d>=0&&d<4)counts[d]++;});
+   const winner=counts.indexOf(Math.max(...counts));
+   daypart={label:timeLabels[winner],fraction:counts[winner]/members.length};
+  }
+  const summary=(wet===0?"No measured precipitation in these hours.":wet===members.length?"Every sampled hour had measurable precipitation.":wet+" of "+members.length+" sampled hours had measurable precipitation.")+(wideSky?" Cloud cover varies widely within this cluster.":"");
+  return {cluster:index+1,count:members.length,share:members.length/rows.length,cloud,humidity,precipitation,temperature,wetFraction:wet/members.length,
+   title:skyLabel(cloud)+" · "+humidityLabel(humidity),summary,provider:common?{label:common[0],fraction:common[1]/members.length}:null,daypart};
+ });
+}
+function renderWeatherProfiles(){
+ const k=+el("k").value,showing=fit.n-step,profiles=selectedWeatherProfiles();
+ el("profile-context").textContent=showing===k?"The scatterplot displays these same "+k+" clusters.":"These profiles describe K = "+k+", while the merge animation shows "+showing+" groups. Click the button to display the selected cut.";
+ el("show-cut").disabled=showing===k;
+ const fmt=(v,d=1)=>Number.isFinite(v)?v.toFixed(d):"—";
+ const pct=v=>Math.round(v*100)+"%";
+ el("profiles").innerHTML=profiles.map((p,i)=>[
+  '<article class="hier-profile-card" role="listitem">',
+  '<div class="hier-profile-meta"><span class="hier-profile-swatch" style="background:',colors[i%colors.length],'"></span><strong>Cluster ',p.cluster,'</strong><span>',p.count,' of ',fit.n,' hours (',pct(p.share),')</span></div>',
+  '<h4>',p.title,'</h4>',
+  '<p class="hier-profile-summary">',p.summary,'</p>',
+  '<div class="hier-profile-values"><div>Mean cloud cover<strong>',fmt(p.cloud),'%</strong></div><div>Mean relative humidity<strong>',fmt(p.humidity),'%</strong></div><div>Mean precipitation<strong>',fmt(p.precipitation,2),' mm</strong></div><div>Hours with precipitation<strong>',pct(p.wetFraction),'</strong></div></div>',
+  '<p class="hier-profile-extra">Mean temperature: ',fmt(p.temperature),'°C (context only)</p>',
+  p.daypart?'<p class="hier-profile-extra">Most common daypart: '+p.daypart.label+' ('+pct(p.daypart.fraction)+')</p>':'',
+  p.provider?'<p class="hier-profile-provider">Most frequent observed weather code group: <strong>'+p.provider.label+'</strong> ('+pct(p.provider.fraction)+')</p>':'',
+  '</article>'
+ ].join('')).join('');
+}
+
 function render(){
  if(!active||!fit)return;
  const n=fit.n,k=+el("k").value,s=Core.silhouettes(fit.D,Core.labelsAt(fit,k).labels),last=fit.merge[step-1];
@@ -131,7 +182,7 @@ function render(){
  el("merge-message").textContent=last?"Merge "+step+": groups of "+last.leftMembers.length+" and "+last.rightMembers.length+" observations merged at height "+number(last.height)+".": "Initially each sampled hour is its own cluster. Click Next merge to build the hierarchy.";
  el("height-note").textContent=fit.method==="ward"?"Ward's displayed height is √(2 × increase in within-cluster SSE).":"Height gives the "+fit.method+" linkage distance at which two groups merge.";
  el("distance-note").textContent=fit.metric==="gower"?"Gower: equal contributions from normalized numeric features and categorical daypart. The scatter displays raw numeric units.":"Euclidean distances and scatter axes use the same "+(el("scale").value==="raw"?"raw measurements.":"z-score coordinates.") ;
- renderScatter();renderTree();renderScores();renderProfile();
+ renderScatter();renderTree();renderScores();renderProfile();renderWeatherProfiles();
 }
 function activate(on){active=on;if(!on)return;setData(getData());if(dirty||!fit)rebuild();else render();}
 ["dims","metric","linkage","scale","sample"].forEach(role=>el(role).addEventListener("change",()=>{dirty=true;rebuild();}));
@@ -140,10 +191,11 @@ el("next").addEventListener("click",()=>{if(fit){step=Math.min(fit.n-1,step+1);r
 el("finish").addEventListener("click",()=>{if(fit){step=fit.n-1;render();}});
 el("reset").addEventListener("click",()=>{if(fit){step=0;render();}});
 el("step").addEventListener("input",()=>{if(fit){step=+el("step").value;render();}});
-el("k").addEventListener("input",()=>{if(fit)render();});
+el("k").addEventListener("input",()=>{if(fit){step=fit.n-Number(el("k").value);render();}});
+el("show-cut").addEventListener("click",()=>{if(fit){step=fit.n-Number(el("k").value);render();}});
 document.addEventListener("weather-data-changed",e=>setData(e.detail&&e.detail.dataset));
 document.addEventListener("learning-tab-changed",e=>activate(e.detail&&e.detail.mode==="hier"));
 window.addEventListener("resize",()=>{if(active&&fit&&window.Plotly)for(const role of ["scatter","tree","scores","profile"])Plotly.Plots.resize(el(role));});
 activate(location.hash==="#hier");
-window.HierarchicalLab={refresh:rebuild,getState:()=>({active,sample:fit?.n,metric:fit?.metric,linkage:fit?.method,k:+el("k").value,mergeStep:step,sourceKey:signature})};
+window.HierarchicalLab={refresh:rebuild,getState:()=>({active,sample:fit?.n,metric:fit?.metric,linkage:fit?.method,k:+el("k").value,mergeStep:step,weatherProfiles:fit?selectedWeatherProfiles():[],sourceKey:signature})};
 })();
