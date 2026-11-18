@@ -6,7 +6,7 @@ if(!host)return;
 const colors=["#232d4b","#e57200","#147d80","#8252a0","#687c25","#b04446","#3978a6","#a16b27","#8d527c","#58776e"];
 host.innerHTML=[
 '<div class="learning-question"><strong>How do weather hours form a hierarchy?</strong><span>Start with each weather hour alone, repeatedly merge the closest groups, then cut the completed tree. Weather-condition labels are never used.</span></div>',
-'<div class="hier-links"><a href="downloads/Hierarchical_Clustering_DS6021.pdf" target="_blank" rel="noopener">Lecture slides — PDF (30 slides, including three appendix slides) ↗</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/Hierarchical_Clustering_Colab.ipynb" target="_blank" rel="noopener">Weather Python notebook in Colab ↗</a><a href="downloads/Hierarchical_Clustering_Colab.ipynb" download>Download notebook</a></div>',
+'<div class="hier-links"><a href="downloads/Hierarchical_Clustering_DS6021.pdf" target="_blank" rel="noopener">Hierarchical lecture slides</a><a href="https://colab.research.google.com/github/afriyiep1/ds6021-predictive-modeling/blob/main/docs/kmeans/downloads/Hierarchical_Clustering_Colab.ipynb" target="_blank" rel="noopener">Weather Python notebook in Colab ↗</a><a href="downloads/Hierarchical_Clustering_Colab.ipynb" download>Download notebook</a></div>',
 '<div class="hier-config">',
 '<label>Features<select data-h="dims"><option value="2">2D · cloud + humidity</option><option value="3">3D · add precipitation</option></select></label>',
 '<label>Distance<select data-h="metric"><option value="euclidean">Euclidean</option><option value="gower">Gower · numeric + daypart</option></select></label>',
