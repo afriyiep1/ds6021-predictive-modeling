@@ -28,3 +28,26 @@
 .hier-teaching h3{color:#232d4b;font:500 24px Georgia,serif}
 @media(max-width:1000px){.hier-config{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:720px){.learning-tab{padding:12px 7px}.learning-tab strong{font-size:16px}.learning-tab>span:last-child{font-size:9px}.hier-plots,.hier-teaching{grid-template-columns:1fr}.hier-config{grid-template-columns:repeat(2,1fr)}.hier-stats{grid-template-columns:repeat(2,1fr)}.hier-plot{height:350px}.hier-kbar{display:block}}
+
+
+/* Interpret the selected dendrogram cut using the original weather measurements. */
+.hier-interpret{border:1px solid #dce1e8;background:#f8f9fc;padding:20px 22px;margin:14px 0 22px}
+.hier-interpret-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.hier-interpret-heading h3{font:500 24px/1.25 Georgia,serif;color:#232d4b;margin:0 0 5px}
+.hier-interpret-heading .hier-hint{margin:0}
+.hier-interpret-heading .button{white-space:normal;flex:0 0 auto}
+.hier-interpret-state{font-size:12px;color:#526279;margin:14px 0}
+.hier-profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:13px}
+.hier-profile-card{border:1px solid #dce1e8;background:#fff;padding:15px 16px 12px;min-width:0}
+.hier-profile-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:#657488}
+.hier-profile-meta>strong{font-size:12px;color:#232d4b}
+.hier-profile-meta>span:last-child{margin-left:auto;font-variant-numeric:tabular-nums}
+.hier-profile-swatch{height:11px;width:11px;flex:0 0 11px;border-radius:50%}
+.hier-profile-card h4{font:500 18px/1.3 Georgia,serif;color:#232d4b;margin:11px 0 7px}
+.hier-profile-summary{font-size:12px;line-height:1.6;color:#46556b;margin:0 0 10px;min-height:38px}
+.hier-profile-values{display:grid;grid-template-columns:1fr 1fr;gap:9px 10px;border-top:1px solid #ecf0f5;border-bottom:1px solid #ecf0f5;padding:10px 0}
+.hier-profile-values>div{font-size:10px;color:#68758a}
+.hier-profile-values strong{display:block;color:#232d4b;font-size:16px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
+.hier-profile-extra,.hier-profile-provider{font-size:11px;color:#5d687b;line-height:1.6;margin:8px 0 0}
+.hier-profile-provider strong{color:#263953;font-weight:600}
+@media(max-width:720px){.hier-interpret{padding:15px}.hier-interpret-heading{flex-direction:column;gap:10px}.hier-interpret-heading h3{font-size:21px}.hier-interpret-heading .button{align-self:flex-start}}
