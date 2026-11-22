@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#091225">
+  <meta name="description" content="Explore NBA box scores, logistic regression, and clustering with a public GitHub Pages Plotly dashboard.">
+  <title>Courtside · DS 6021 NBA Model Lab</title>
+  <script src="https://cdn.plot.ly/plotly-4.3.0.min.js" charset="utf-8"></script>
+  <style>
+    :root{--bg:#07111f;--side:#0a1628;--panel:#0e1d31;--panel2:#12243b;--line:#24374b;--muted:#94a7bc;--white:#f4f8fc;--orange:#e87430;--blue:#67a7eb;--teal:#45cfbd;--purple:#ae95ed;--danger:#ed8b93;--r:17px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--white);background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:14px}
+    button,input,select{font:inherit}button{cursor:pointer}a{color:#a7d5ff;text-decoration:none}a:hover{text-decoration:underline}
+    .app{display:grid;grid-template-columns:246px minmax(0,1fr);min-height:100vh}
+    .sidebar{position:sticky;top:0;height:100vh;padding:27px 17px;background:linear-gradient(180deg,#0e1e33,#0a1525 55%,#0a1525);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:25px;z-index:5}
+    .logo{display:flex;align-items:center;gap:12px;padding:0 9px}.logo-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:14px;font-size:24px;background:linear-gradient(140deg,#ed8a36,#a2491e);box-shadow:0 8px 24px #ea763020}.logo strong{display:block;letter-spacing:.13em;font-size:17px}.logo small{display:block;letter-spacing:.08em;color:var(--muted);font-size:10px;margin-top:4px}
+    .side-label{padding:0 13px;color:#748da6;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}.nav{display:grid;gap:8px}.nav button{width:100%;text-align:left;border:1px solid transparent;border-radius:12px;padding:14px 13px;background:transparent;color:#9fb0c5;display:flex;align-items:center;gap:11px;font-weight:650;transition:.2s}.nav button:hover{background:#172b42;color:#fff}.nav button.active{color:white;background:#21354a;border-color:#3a5067}.nav .num{font-size:11px;font-weight:800;width:25px;height:25px;display:grid;place-items:center;border-radius:7px;background:#182b41;color:#acc3dc}.nav .active .num{background:var(--orange);color:#fff}
+    .side-footer{margin-top:auto;border-top:1px solid var(--line);padding:19px 10px 4px;font-size:12px;color:#9eb1c7;line-height:1.75}.tinybadge{border:1px solid #43637b;color:#d0e8f7;border-radius:20px;padding:5px 9px;font-size:10px;display:inline-block;letter-spacing:.03em}
+    .main{min-width:0;max-width:1620px;width:100%;padding:32px clamp(18px,3vw,53px) 60px;margin:auto}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:30px}.crumb{color:#9db0c4;font-size:12px;letter-spacing:.065em}.crumb strong{color:var(--white)}.pill{display:inline-flex;align-items:center;gap:7px;background:#102a35;color:#87e7c9;border:1px solid #25584b;font-size:11px;font-weight:700;border-radius:99px;padding:9px 13px}.dot{width:7px;height:7px;border-radius:100%;background:#5ddcb4;box-shadow:0 0 8px #5ddcb4}
+    .hero{background:radial-gradient(ellipse at 93% 7%,#33405c 0%,transparent 42%),linear-gradient(135deg,#172e49 0%,#11243b 60%,#12223a);border:1px solid #30455d;box-shadow:0 16px 55px #0002;border-radius:23px;padding:31px 36px 32px;margin-bottom:23px;position:relative;overflow:hidden}.hero:after{content:"◌";position:absolute;right:43px;top:20px;font-size:180px;line-height:1;color:#e9842b0c;pointer-events:none}.eyebrow{font-size:11px;color:#ffa268;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}.hero h1{font-size:clamp(26px,3vw,40px);font-weight:780;letter-spacing:-.04em;line-height:1.15;margin:0 0 10px}.hero p{max-width:770px;color:#b8cade;margin:0;line-height:1.7;font-size:14px}
+    .metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:23px}.metric{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 19px}.metric .kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#9eb3c8}.metric .value{font-size:27px;font-weight:790;margin:8px 0 4px;letter-spacing:-.05em;font-variant-numeric:tabular-nums}.metric .micro{font-size:11px;color:#899eb5}
+    .tab-panel{display:none}.tab-panel.active{display:block}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:17px 0 13px}.section-title h2{font-size:17px;letter-spacing:-.015em;margin:0}.section-title span{font-size:11px;color:var(--muted)}
+    .controls{display:flex;flex-wrap:wrap;gap:14px;padding:18px 19px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;align-items:end}.control{min-width:130px;flex:1 1 130px}.control.wide{flex:2 1 190px}.control label{display:block;color:#afc4d8;font-size:11px;font-weight:650;margin:0 0 7px}.control select,.control input[type=range]{width:100%}.control select{appearance:none;color:#e7f2ff;background:#162a42;border:1px solid #35506b;border-radius:10px;padding:10px 32px 10px 12px;outline:none;min-height:41px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a8bed3' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}.control select:focus{border-color:var(--blue)}.control select:disabled{opacity:.38}.control input[type=range]{accent-color:var(--orange);padding:6px 0;cursor:pointer}.rangevalue{display:inline-block;color:#fff;font-weight:800;background:#283e55;border-radius:5px;padding:2px 7px;margin-left:5px;min-width:38px;text-align:center}
+    .btn{background:#243952;border:1px solid #45617b;border-radius:10px;color:white;font-weight:700;padding:12px 15px;white-space:nowrap}.btn:hover{background:#33516f}.btn:focus-visible,.nav button:focus-visible{outline:3px solid var(--orange)}
+    .charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}.charts.single{grid-template-columns:1fr}.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 10px;min-width:0;overflow:hidden}.panel .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:5px}.panel h3{font-size:14px;line-height:1.3;margin:0;font-weight:750}.panel .sub{font-size:11px;color:#8ea5ba;margin-top:5px}.plot{width:100%;height:360px}.plot.tall{height:440px}.plot.short{height:280px}.two-wide{grid-column:span 2}.insight{border:1px solid #3c5e72;background:linear-gradient(90deg,#173243,#142a40);padding:14px 18px;border-radius:12px;margin:16px 0 20px;line-height:1.65;color:#cfe4f4;font-size:12px}.insight b{color:#fff}.insight.orange{background:#342415;border-color:#714e2b;color:#eed3b4}.insight.orange b{color:#fff3dc}.divider-space{height:15px}
+    .model-metrics{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;margin-bottom:18px}.model-metrics .metric{padding:13px}.model-metrics .metric .value{font-size:23px}.model-metrics .metric .kicker{font-size:9px}.model-metrics .metric .micro{font-size:10px}
+    .cluster-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 19px}.cluster-card{background:#14283e;border:1px solid #2b435b;border-radius:12px;padding:14px 15px;display:flex;gap:12px;align-items:flex-start}.cluster-swatch{width:11px;height:11px;border-radius:100%;margin-top:5px;flex-shrink:0}.cluster-card strong{font-size:12px}.cluster-card .detail{font-size:11px;color:#9fb6c9;margin-top:6px;line-height:1.5}
+    .feature-picker{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:17px 19px;margin:0 0 17px}.feature-picker strong{font-size:12px}.feature-picker .sub{color:var(--muted);font-size:11px;margin:6px 0 13px}.feature-options{display:flex;flex-wrap:wrap;gap:8px}.feature-options label{cursor:pointer;display:flex;align-items:center;gap:6px;border:1px solid #35506b;border-radius:8px;background:#172b43;padding:8px 10px;font-weight:650;font-size:11px}.feature-options input{accent-color:var(--orange)}.feature-note{font-size:11px;color:#b2c5d9;margin-top:10px}
+    .footer{color:#8095aa;font-size:11px;margin-top:27px;border-top:1px solid var(--line);padding-top:18px;line-height:1.7}
+    [hidden]{display:none!important}
+    @media(max-width:1120px){.app{grid-template-columns:190px minmax(0,1fr)}.main{padding:24px 20px}.metric-row{grid-template-columns:repeat(2,1fr)}.model-metrics{grid-template-columns:repeat(3,1fr)}.sidebar{padding:23px 11px}}
+    @media(max-width:780px){.app{display:block}.sidebar{height:auto;position:relative;padding:12px 15px;display:block}.sidebar .logo{margin-bottom:12px}.side-label,.side-footer{display:none}.nav{display:flex;gap:6px}.nav button{font-size:11px;padding:10px 9px;justify-content:center}.nav .num{display:none}.main{padding:16px 12px 30px}.hero{padding:22px}.charts{grid-template-columns:1fr}.two-wide{grid-column:auto}.plot{height:330px}.cluster-cards{grid-template-columns:1fr 1fr}.topbar{margin-bottom:15px}.pill{font-size:9px}}
+    @media(max-width:480px){.metric-row{gap:8px}.metric{padding:12px}.metric .value{font-size:22px}.model-metrics{grid-template-columns:repeat(2,1fr)}.cluster-cards{grid-template-columns:1fr}.control{flex:1 1 45%}.hero h1{font-size:26px}.panel{padding:12px 8px 5px}.plot{height:315px}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-icon">🏀</div><div><strong>COURTSIDE</strong><small>DS 6021 · MODEL LAB</small></div></div>
+    <div><div class="side-label">Navigate dashboard</div><nav class="nav" aria-label="Dashboard tabs">
+      <button type="button" class="active" data-tab="explore" aria-selected="true"><span class="num">01</span> Explore Data</button>
+      <button type="button" data-tab="logit" aria-selected="false"><span class="num">02</span> Logistic Regression</button>
+      <button type="button" data-tab="cluster" aria-selected="false"><span class="num">03</span> Clustering</button>
+    </nav></div>
+    <div class="side-footer"><span class="tinybadge">2017–18 NBA SEASON</span><p>University of Virginia<br>MS in Data Science<br>Introduction to Predictive Modeling</p><p>Built with Python + Plotly<br>Hosted on GitHub Pages</p></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div class="crumb"><strong>DS 6021</strong> / Applied Predictive Modeling / NBA</div><div class="pill"><span class="dot"></span> INTERACTIVE MODEL LAB</div></div>
+    <section class="hero"><div class="eyebrow">Basketball analytics · 2017–18</div><h1 id="hero-title">Find the story in every game.</h1><p id="hero-desc">Explore team performance, discover the statistical signals associated with winning, and uncover distinct playing styles across the NBA.</p></section>
+    <div class="metric-row" id="top-metrics">
+      <div class="metric"><div class="kicker">Team-game rows</div><div class="value">2,460</div><div class="micro">Two observations per game</div></div>
+      <div class="metric"><div class="kicker">NBA games</div><div class="value">1,230</div><div class="micro">Completed regular-season games</div></div>
+      <div class="metric"><div class="kicker">Teams</div><div class="value">30</div><div class="micro">82 games per team</div></div>
+      <div class="metric"><div class="kicker">Season</div><div class="value">2017–18</div><div class="micro">Oct 17 – Apr 11</div></div>
+    </div>
+
+    <section id="explore" class="tab-panel active" aria-label="Explore Data">
+      <div class="section-title"><h2>Explore the data</h2><span>Change a filter to update the visuals</span></div>
+      <div class="controls">
+        <div class="control"><label for="e-team">Team</label><select id="e-team"></select></div>
+        <div class="control"><label for="e-result">Outcome</label><select id="e-result"><option value="all">Wins + losses</option><option value="1">Wins only</option><option value="0">Losses only</option></select></div>
+        <div class="control"><label for="e-home">Venue</label><select id="e-home"><option value="all">Home + away</option><option value="Home">Home only</option><option value="Away">Away only</option></select></div>
+        <div class="control"><label for="e-x">Scatter X</label><select id="e-x"></select></div>
+        <div class="control"><label for="e-y">Scatter Y</label><select id="e-y"></select></div>
+        <div class="control"><label for="e-stat">Compare statistic</label><select id="e-stat"></select></div>
+        <button class="btn" id="e-download" type="button">↓ Export filtered CSV</button>
+      </div>
+      <div class="metric-row" id="e-metrics"></div>
+      <div class="charts">
+        <div class="panel"><div class="panel-head"><div><h3>Points vs field-goal percentage</h3><div class="sub">Hover over each team-game observation</div></div></div><div class="plot" id="e-scatter"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>How winners and losers differ</h3><div class="sub">Box plots show the distribution of a selected statistic</div></div></div><div class="plot" id="e-box"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Who's winning?</h3><div class="sub">Top 12 teams by season win percentage; venue filter applies</div></div></div><div class="plot" id="e-teams"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Which variables move together?</h3><div class="sub">Pearson correlations from the complete season</div></div></div><div class="plot" id="e-corr"></div></div>
+      </div>
+      <div class="insight"><b>Explore → question:</b> Which metrics separate wins from losses, and how might the answer change when you examine one team instead of the entire league? Associations are not necessarily causal relationships.</div>
+    </section>
+
+    <section id="logit" class="tab-panel" aria-label="Logistic Regression">
+      <div class="section-title"><h2>Logistic regression · win or loss</h2><span>Model fitted in Python · threshold interactive in browser</span></div>
+      <div class="controls">
+        <div class="control"><label for="l-penalty">Regularization</label><select id="l-penalty"><option value="l2">Ridge · L2</option><option value="l1">Lasso · L1</option><option value="none">No penalty</option></select></div>
+        <div class="control"><label for="l-c">Strength (C)</label><select id="l-c"><option value="0.03">0.03 · strong</option><option value="0.1">0.1</option><option value="1" selected>1 · default</option><option value="10">10</option><option value="100">100 · weak</option></select></div>
+        <div class="control"><label for="l-set">Evaluation sample</label><select id="l-set"><option value="validation">Validation · tune</option><option value="test">Test · audit only</option></select></div>
+        <div class="control wide"><label for="l-threshold">Win threshold <span class="rangevalue" id="l-threshold-show">0.50</span></label><input type="range" id="l-threshold" min="0.10" max="0.90" step="0.01" value="0.50"></div>
+      </div>
+      <div class="model-metrics" id="l-metrics"></div>
+      <div class="insight orange" id="l-readout"></div>
+      <div class="charts">
+        <div class="panel"><div class="panel-head"><div><h3>Confusion matrix</h3><div class="sub">Rows = predicted outcome · columns = actual outcome</div></div></div><div class="plot" id="l-confusion"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>ROC · ranking performance</h3><div class="sub">Area under curve is independent of threshold</div></div></div><div class="plot" id="l-roc"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Predicted win probabilities</h3><div class="sub">Watch the decision threshold move across probabilities</div></div></div><div class="plot" id="l-prob"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Standardized model coefficients</h3><div class="sub">Numerics: one SD; Home vs Away: indicator change</div></div></div><div class="plot" id="l-coeff"></div></div>
+        <div class="panel two-wide"><div class="panel-head"><div><h3>Model selection · compare penalty strength</h3><div class="sub">Validation AUC and log loss for pre-trained regularized models</div></div></div><div class="plot short" id="l-compare"></div></div>
+      </div>
+      <div class="insight"><b>Interpretation & validation:</b> Models use StandardScaler on 11 numeric variables and OneHotEncoder on home_away inside a scikit-learn Pipeline; transforms are fitted only on training data. Use validation predictions for exploratory model/threshold selection; use the test set once for a final audit. Standardization is fitted on training data only. <b>Important:</b> Game box-score features are only observed after a game. This analysis is outcome classification, not a pre-game forecast. The requested PTS feature is included, but scoring and other post-game statistics cannot be known before tipoff. The direct outcome proxy +/- is excluded.</div>
+    </section>
+
+    <section id="cluster" class="tab-panel" aria-label="Clustering">
+      <div class="section-title"><h2>Unsupervised learning · playing styles</h2><span>Find clusters without using win/loss labels</span></div>
+      <div class="controls">
+        <div class="control"><label for="c-alg">Algorithm</label><select id="c-alg"><option value="kmeans">K-means (Lloyd)</option><option value="hierarchical">Hierarchical (Ward)</option></select></div>
+        <div class="control"><label for="c-scale">Variable scaling</label><select id="c-scale"><option value="standard">Standardized (z-scores)</option><option value="raw">Raw values</option></select></div>
+        <div class="control wide"><label for="c-k">Number of clusters <span class="rangevalue" id="c-k-show">3</span></label><input type="range" id="c-k" min="2" max="7" value="3" step="1"></div>
+      </div>
+      <div class="feature-picker"><div><strong>Choose 2–6 game statistics</strong><div class="sub">Clustering recomputes when you change the features; win/loss is never supplied to either method. The first two selected stats define the scatterplot axes.</div></div><div id="c-features" class="feature-options"></div><div class="feature-note" id="c-feature-note"></div></div>
+      <div class="metric-row" id="c-metrics"></div>
+      <div class="charts">
+        <div class="panel two-wide"><div class="panel-head"><div><h3>Team-game styles in two dimensions</h3><div class="sub">First two chosen statistics on the axes; distance uses all chosen statistics</div></div></div><div class="plot tall" id="c-scatter"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Within-cluster variation vs K</h3><div class="sub">K-means only: within-cluster sum of squares</div></div></div><div class="plot short" id="c-elbow"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Average silhouette score vs K</h3><div class="sub">Higher suggests more distinct and compact groups</div></div></div><div class="plot short" id="c-sil"></div></div>
+        <div class="panel two-wide"><div class="panel-head"><div><h3>What makes each cluster different?</h3><div class="sub">Cluster average minus league average, in feature standard-deviation units</div></div></div><div class="plot" id="c-heat"></div></div>
+        <div class="panel two-wide" id="c-dendro-panel" hidden><div class="panel-head"><div><h3>Ward hierarchy · dendrogram</h3><div class="sub">Ward hierarchy on a 45-row subset of the 240-row interactive sample</div></div></div><div class="plot" id="c-dendro"></div></div>
+      </div>
+      <div class="section-title"><h2>Cluster scouting reports</h2><span>Descriptions generated from relative feature averages</span></div>
+      <div id="c-cluster-cards" class="cluster-cards"></div>
+      <div class="insight"><b>Clustering → interpretation:</b> Each observation is a <b>team in one game</b>, not a team across the whole season. Changing raw to standardized changes the distance geometry; that may change the clusters dramatically. K-means and Ward use Euclidean geometry. Silhouette is calculated on all 240 interactive sample rows. Neither method receives the win/loss column. For quick, flexible clustering in a static GitHub Pages site, both methods use the same reproducible sample: 8 rows per team, 240 team-game observations.</div>
+    </section>
+    <div class="footer">DS 6021 · Introduction to Predictive Modeling · University of Virginia School of Data Science. NBA 2017–18 complete regular-season team-game box scores, 2,460 rows. Logistic pipelines are fitted by <code>build_dashboard.py</code>; browser-side K-means and Ward run on a reproducible 240-row subset to support arbitrary feature selection. Source code is included for reproducibility.</div>
+  </main>
+</div>
+<script>
+/*__NBA_DATA__*/
+
+const C={navy:'#0e1d31',orange:'#e87430',blue:'#67a7eb',teal:'#45cfbd',purple:'#ae95ed',red:'#ed8b93',muted:'#91a7bc',white:'#eef6ff',grid:'#283c51'};
+const clusterColors=[C.orange,C.blue,C.teal,C.purple,'#e1c173','#ed8b93','#9ad183'];
+const PLOT_CONFIG={responsive:true,displaylogo:false,modeBarButtonsToRemove:['lasso2d','select2d','autoScale2d','toggleSpikelines'],toImageButtonOptions:{format:'png',width:1100,height:650,scale:2}};
+const baseLayout={paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{color:C.muted,family:'Inter, system-ui, sans-serif',size:11},margin:{l:58,r:22,t:20,b:48},hoverlabel:{bgcolor:'#1c3148',font:{color:'#ffffff'}},legend:{orientation:'h',y:-.18,x:0,bgcolor:'rgba(0,0,0,0)'},xaxis:{gridcolor:C.grid,zerolinecolor:C.grid,linecolor:C.grid},yaxis:{gridcolor:C.grid,zerolinecolor:C.grid,linecolor:C.grid}};
+function plot(id,traces,extra={}){const el=document.getElementById(id);if(!el)return; const layout={...baseLayout,...extra,xaxis:{...baseLayout.xaxis,...(extra.xaxis||{})},yaxis:{...baseLayout.yaxis,...(extra.yaxis||{})}};Plotly.react(el,traces,layout,PLOT_CONFIG).catch(e=>console.error('Plotly:',id,e));}
+function $(id){return document.getElementById(id)}
+function fmt(x,dp=1){return Number.isFinite(x)?Number(x).toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp}):'—'}
+function metric(label,val,micro=''){return `<div class="metric"><div class="kicker">${label}</div><div class="value">${val}</div><div class="micro">${micro}</div></div>`}
+function selectOptions(id,items,chosen){$(id).innerHTML=items.map(t=>`<option value="${t}">${t}</option>`).join(''); if(chosen!==undefined)$(id).value=chosen}
+const E=NBA.explore, EI=Object.fromEntries(E.fields.map((s,i)=>[s,i]));
+selectOptions('e-team',['ALL TEAMS',...E.teams],'ALL TEAMS');
+for(const [id,choice] of [['e-x','FGP'],['e-y','PTS'],['e-stat','AST']])selectOptions(id,E.stats,choice);
+const titles={explore:['Find the story in every game.','Explore team performance, compare winners to losers, and discover patterns across 2,460 team-game records.'],logit:['Can box scores identify a winner?','Explore logistic regression probabilities, ridge and lasso penalties, decision thresholds, and held-out evaluation.'],cluster:['Discover hidden styles of play.','Explore how distance, scaling, and the number of clusters reveal different game-level playing styles.']};
+const initialized=new Set();
+function activate(name){
+  document.querySelectorAll('[data-tab]').forEach(b=>{let yes=b.dataset.tab===name;b.classList.toggle('active',yes);b.setAttribute('aria-selected',yes)});
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id===name));
+  $('hero-title').textContent=titles[name][0];$('hero-desc').textContent=titles[name][1];
+  history.replaceState(null,'','#'+name);
+  requestAnimationFrame(()=>{if(name==='explore')renderExplore();if(name==='logit')renderLogit();if(name==='cluster')renderCluster();initialized.add(name)});
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
+
+// Tab 1: EDA. Row indexing keeps the HTML data payload smaller than an object per record.
+function exploreRows(applyResult=true){let t=$('e-team').value,r=$('e-result').value,h=$('e-home').value;return E.rows.filter(row=>(t==='ALL TEAMS'||row[EI.TEAM]===t)&&(!applyResult||r==='all'||String(row[EI.win])===r)&&(h==='all'||row[EI.home_away]===h))}
+function renderExplore(){
+  const rows=exploreRows(),stat=$('e-stat').value,x=$('e-x').value,y=$('e-y').value;
+  const wins=rows.filter(r=>r[EI.win]).length;const avg=rows.length?rows.reduce((a,r)=>a+r[EI.PTS],0)/rows.length:0;
+  $('e-metrics').innerHTML=metric('Team-games',fmt(rows.length,0),'Under current filters')+metric('Win rate',rows.length?fmt(100*wins/rows.length)+'%':'—','Win share of selected records')+metric('Average points',rows.length?fmt(avg):'—','PTS per selected team-game')+metric('Unique teams',fmt(new Set(rows.map(r=>r[EI.TEAM])).size,0),'In filtered sample');
+  const scatter=[{win:0,color:C.red,label:'Losses'},{win:1,color:C.teal,label:'Wins'}].map(g=>{
+    let rr=rows.filter(r=>r[EI.win]===g.win);return {type:'scattergl',mode:'markers',name:g.label,x:rr.map(r=>r[EI[x]]),y:rr.map(r=>r[EI[y]]),customdata:rr.map(r=>[r[EI.TEAM],r[EI.DATE],r[EI.MATCHUP]]),marker:{size:8,color:g.color,opacity:.6,line:{width:0}},hovertemplate:'<b>%{customdata[0]}</b> · %{customdata[1]}<br>%{customdata[2]}<br>'+x+': %{x}<br>'+y+': %{y}<extra>'+g.label+'</extra>'}
+  });
+  plot('e-scatter',scatter,{xaxis:{title:{text:x}},yaxis:{title:{text:y}},margin:{l:63,r:20,t:20,b:63},legend:{orientation:'h',y:1.1,x:0}});
+  plot('e-box',[{type:'box',name:'Losses',y:rows.filter(r=>!r[EI.win]).map(r=>r[EI[stat]]),marker:{color:C.red},boxmean:true,fillcolor:'rgba(237,139,147,.18)',line:{color:C.red}},{type:'box',name:'Wins',y:rows.filter(r=>r[EI.win]).map(r=>r[EI[stat]]),marker:{color:C.teal},boxmean:true,fillcolor:'rgba(69,207,189,.18)',line:{color:C.teal}}],{yaxis:{title:{text:stat}},showlegend:false,margin:{l:65,r:20,t:18,b:50}});
+  const rrank=exploreRows(false), by={};rrank.forEach(r=>{let team=r[EI.TEAM];(by[team]??=[]).push(r[EI.win])});
+  let rates=Object.entries(by).map(([t,v])=>({t,p:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.p-a.p).slice(0,12).reverse();
+  plot('e-teams',[{type:'bar',orientation:'h',x:rates.map(v=>v.p*100),y:rates.map(v=>v.t),text:rates.map(v=>fmt(v.p*100)+'%'),textposition:'outside',cliponaxis:false,marker:{color:rates.map(v=>v.p>=.5?C.teal:C.orange),line:{width:0}},hovertemplate:'%{y}<br>Win rate %{x:.1f}%<extra></extra>'}],{xaxis:{title:{text:'Win rate (%)'},range:[0,105]},yaxis:{automargin:true},margin:{l:58,r:53,t:10,b:44},showlegend:false});
+  const corr=E.correlation;plot('e-corr',[{type:'heatmap',x:E.stats,y:E.stats,z:corr,zmin:-1,zmax:1,zmid:0,colorscale:[[0,'#417aa8'],[.5,'#1a293a'],[1,'#e87430']],colorbar:{thickness:11,len:.78,outlinewidth:0},hovertemplate:'%{y} × %{x}<br>Correlation: %{z:.2f}<extra></extra>'}],{margin:{l:55,r:20,t:14,b:72},xaxis:{tickangle:-55,side:'bottom',showgrid:false},yaxis:{autorange:'reversed',showgrid:false}});
+}
+['e-team','e-result','e-home','e-x','e-y','e-stat'].forEach(id=>$(id).addEventListener('change',renderExplore));
+$('e-download').addEventListener('click',()=>{
+  let rows=exploreRows();let cols=E.fields;let content=[cols,...rows].map(row=>row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n');
+  let url=URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));let a=document.createElement('a');a.href=url;a.download='nba_filtered_team_games.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url)
+});
+
+// Tab 2: Model probabilities and coefficients were fitted in Python in distinct chronological periods.
+const L=NBA.logit;
+const LP={l1:'Lasso (L1)',l2:'Ridge (L2)',none:'Unpenalized'};
+function modelKey(){const p=$('l-penalty').value;return p==='none'?'none':p+'_'+$('l-c').value}
+function classStats(y,p,t){let tn=0,fn=0,fp=0,tp=0;for(let i=0;i<y.length;i++){let guess=p[i]>=t?1:0;if(y[i]===1&&guess)tp++;else if(y[i]===1&&!guess)fn++;else if(y[i]===0&&guess)fp++;else tn++}
+  let safe=(num,den)=>den?num/den:0;const prec=safe(tp,tp+fp),rec=safe(tp,tp+fn),spec=safe(tn,tn+fp);
+  return {tn,fn,fp,tp,accuracy:(tp+tn)/y.length,precision:prec,recall:rec,specificity:spec,balanced:(rec+spec)/2,f1:safe(2*prec*rec,prec+rec)}
+}
+function rocAt(y,p,t){let s=classStats(y,p,t);return {fpr:1-s.specificity,tpr:s.recall}}
+function rocCurve(y,p){let th=[1.01,...Array.from({length:101},(_,i)=>1-i/100),-.01],xs=[],ys=[];for(let v of th){let a=rocAt(y,p,v);xs.push(a.fpr);ys.push(a.tpr)}return {xs,ys}}
+function renderCompare(){const cs=[.03,.1,1,10,100],traces=[];for(const penalty of ['l2','l1']){
+  traces.push({type:'scatter',mode:'lines+markers',x:cs,y:cs.map(c=>L.models[penalty+'_'+c].prediction.validation.auc),name:LP[penalty]+' AUC',line:{color:penalty==='l2'?C.blue:C.orange,width:3},marker:{size:8},yaxis:'y'});
+  traces.push({type:'scatter',mode:'lines+markers',x:cs,y:cs.map(c=>L.models[penalty+'_'+c].prediction.validation.logloss),name:LP[penalty]+' log loss',line:{color:penalty==='l2'?C.teal:C.purple,width:2,dash:'dot'},marker:{size:7},yaxis:'y2'});
+}
+  plot('l-compare',traces,{margin:{l:53,r:55,t:24,b:50},xaxis:{type:'log',title:{text:'C · larger = weaker regularization'},tickvals:cs,ticktext:cs.map(String)},yaxis:{title:{text:'AUC'},side:'left',range:[.5,1]},yaxis2:{title:{text:'Log loss'},overlaying:'y',side:'right',showgrid:false},legend:{orientation:'h',y:1.23,x:0,font:{size:10}}});
+}
+function renderLogit(){const penalty=$('l-penalty').value,c=$('l-c');c.disabled=penalty==='none';const threshold=+$('l-threshold').value; $('l-threshold-show').textContent=threshold.toFixed(2);
+  let key=modelKey(),M=L.models[key]; if(!M){console.error('Missing model',key);return}const split=$('l-set').value,y=L.partitions[split].y,p=M.prediction[split].p;
+  const s=classStats(y,p,threshold);
+  $('l-metrics').innerHTML=metric('Accuracy',fmt(s.accuracy*100)+'%','All decisions correct')+metric('Balanced accuracy',fmt(s.balanced*100)+'%','Average recall across classes')+metric('Precision',fmt(s.precision*100)+'%','Among predicted wins')+metric('F1',fmt(s.f1*100)+'%','Precision–recall balance')+metric('Recall · TPR',fmt(s.recall*100)+'%','Among actual wins')+metric('ROC AUC',fmt(M.prediction[split].auc,3),'Probability ranking')+metric('Log loss',fmt(M.prediction[split].logloss,3),'Probability quality');
+  $('l-readout').innerHTML='<b>'+LP[penalty]+(penalty==='none'?'':' · C = '+$('l-c').value)+'</b> · '+L.partitions[split].rows+' team-game records ('+L.partitions[split].games+' games) · '+(split==='validation'?'Use this partition to choose model and threshold.':'Independent holdout: avoid repeatedly selecting models against these results.')+' <b>'+M.nonzero+' / '+L.features.length+' nonzero coefficients.</b> The model was trained on '+fmt(L.counts.train,0)+' earlier team-games.';
+  const z=[[s.tn,s.fn],[s.fp,s.tp]],tags=[['TN','FN'],['FP','TP']];
+  plot('l-confusion',[{type:'heatmap',z,x:['Actual loss','Actual win'],y:['Predicted loss','Predicted win'],colorscale:[[0,'#223a51'],[1,'#367d9e']],showscale:false,text:z.map((r,i)=>r.map((a,j)=>tags[i][j]+'<br>'+a)),texttemplate:'%{text}',textfont:{size:20,color:'#fff'},hovertemplate:'%{y}<br>%{x}<br>Count: %{z}<extra></extra>'}],{margin:{l:105,r:20,t:18,b:65},xaxis:{side:'bottom',showgrid:false},yaxis:{autorange:'reversed',showgrid:false}});
+  const roc=rocCurve(y,p),selected=rocAt(y,p,threshold);
+  plot('l-roc',[{type:'scatter',mode:'lines',x:[0,1],y:[0,1],name:'Random baseline',line:{color:'#677b91',dash:'dash'}},{type:'scatter',mode:'lines',x:roc.xs,y:roc.ys,name:'ROC curve',line:{color:C.teal,width:3},fill:'tozeroy',fillcolor:'rgba(69,207,189,.08)'},{type:'scatter',mode:'markers',x:[selected.fpr],y:[selected.tpr],name:'Selected threshold',marker:{size:13,color:C.orange,line:{color:'#fff',width:2}}}],{xaxis:{title:{text:'False positive rate'},range:[0,1]},yaxis:{title:{text:'True positive rate'},range:[0,1]},legend:{orientation:'h',y:1.17,x:0,font:{size:10}},margin:{l:62,r:18,t:35,b:55}});
+  const probs=[{type:'histogram',x:p.filter((v,i)=>!y[i]),name:'Actual loss',opacity:.7,marker:{color:C.red},nbinsx:24},{type:'histogram',x:p.filter((v,i)=>y[i]),name:'Actual win',opacity:.7,marker:{color:C.teal},nbinsx:24}];
+  plot('l-prob',probs,{barmode:'overlay',xaxis:{title:{text:'Predicted P(win)'},range:[0,1]},yaxis:{title:{text:'Count'}},shapes:[{type:'line',x0:threshold,x1:threshold,y0:0,y1:1,yref:'paper',line:{color:C.orange,width:3,dash:'dash'}}],annotations:[{x:threshold,y:1.07,yref:'paper',text:'Decision threshold',showarrow:false,font:{color:C.orange,size:10}}],legend:{orientation:'h',y:1.2,x:0},margin:{l:55,r:18,t:44,b:55}});
+  let coeff=L.features.map((name,i)=>({name,v:M.coef[i]})).sort((a,b)=>Math.abs(a.v)-Math.abs(b.v));
+  plot('l-coeff',[{type:'bar',orientation:'h',y:coeff.map(a=>a.name),x:coeff.map(a=>a.v),marker:{color:coeff.map(a=>a.v>=0?C.teal:C.orange)},hovertemplate:'%{y}<br>β = %{x:.3f}<extra></extra>'}],{xaxis:{title:{text:'Change in log odds (1 SD, or home vs away)'}},yaxis:{automargin:true},margin:{l:75,r:16,t:12,b:62},showlegend:false});
+  renderCompare();
+}
+['l-penalty','l-c','l-set'].forEach(id=>$(id).addEventListener('change',renderLogit));$('l-threshold').addEventListener('input',renderLogit);
+
+// Tab 3: choose any 2–6 numeric statistics. Both models use the SAME 240
+// team-balanced team-game rows, keeping browser computations responsive.
+const G = NBA.cluster;
+const GI = Object.fromEntries(G.fields.map((name, i) => [name, i]));
+let chosen = ['PTS', 'FGP', 'TPP', 'REB', 'AST', 'TOV'];
+const cache = new Map();
+
+function featureControls() {
+  $('c-features').innerHTML = G.features.map(name =>
+    `<label><input type="checkbox" value="${name}" ${chosen.includes(name) ? 'checked' : ''}> ${name}</label>`).join('');
+  $('c-features').querySelectorAll('input').forEach(box => box.addEventListener('change', () => {
+    const selected = [...$('c-features').querySelectorAll('input:checked')].map(el => el.value);
+    if (selected.length < 2 || selected.length > 6) {
+      box.checked = !box.checked;
+      $('c-feature-note').textContent = 'Please select between 2 and 6 statistics.';
+      return;
+    }
+    chosen = selected;
+    renderCluster();
+  }));
+}
+
+function sqDist(a, b) {
+  let sum = 0;
+  for (let j = 0; j < a.length; j++) sum += (a[j] - b[j]) ** 2;
+  return sum;
+}
+function seeded(seed) {
+  let state = seed >>> 0;
+  return () => { state = (1664525 * state + 1013904223) >>> 0; return state / 4294967296; };
+}
+function kmeans(X, k) {
+  const n = X.length, p = X[0].length;
+  const rand = seeded(123 + 19 * k);
+  const centers = [X[Math.floor(rand() * n)].slice()];
+  // k-means++ initial centroids, followed by Lloyd's assignment / mean updates.
+  for (let c = 1; c < k; c++) {
+    const weights = X.map(x => Math.min(...centers.map(m => sqDist(x, m))));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let choice = rand() * total, idx = 0;
+    for (; idx < n - 1 && choice > weights[idx]; idx++) choice -= weights[idx];
+    centers.push(X[idx].slice());
+  }
+  let labels = Array(n).fill(0);
+  for (let it = 0; it < 80; it++) {
+    let changed = false;
+    for (let i = 0; i < n; i++) {
+      let best = Infinity, label = 0;
+      for (let j = 0; j < k; j++) {
+        let d = sqDist(X[i], centers[j]);
+        if (d < best) { best = d; label = j; }
+      }
+      if (labels[i] !== label) changed = true;
+      labels[i] = label;
+    }
+    const sums = Array.from({ length: k }, () => Array(p).fill(0));
+    const counts = Array(k).fill(0);
+    X.forEach((x, i) => { counts[labels[i]]++; x.forEach((v, j) => sums[labels[i]][j] += v); });
+    for (let j = 0; j < k; j++) {
+      if (counts[j]) centers[j] = sums[j].map(v => v / counts[j]);
+      else centers[j] = X[Math.floor(rand() * n)].slice();
+    }
+    if (!changed && it > 0) break;
+  }
+  let wcss = X.reduce((sum, x, i) => sum + sqDist(x, centers[labels[i]]), 0);
+  return { labels, wcss };
+}
+
+// Ward merge cost = n_A*n_B/(n_A+n_B) * ||mean_A - mean_B||^2.
+// This is the increase in within-cluster SSE caused by a merge.
+function wardTree(X) {
+  const nodes = X.map((x, i) => ({ id: i, mean: x.slice(), n: 1, members: [i], height: 0 }));
+  let active = nodes.slice();
+  const merges = [];
+  while (active.length > 1) {
+    let best = Infinity, ia = 0, ib = 1;
+    for (let i = 0; i < active.length - 1; i++) {
+      for (let j = i + 1; j < active.length; j++) {
+        const a = active[i], b = active[j];
+        const cost = a.n * b.n / (a.n + b.n) * sqDist(a.mean, b.mean);
+        if (cost < best) { best = cost; ia = i; ib = j; }
+      }
+    }
+    const a = active[ia], b = active[ib];
+    const n = a.n + b.n;
+    const parent = {
+      id: nodes.length,
+      mean: a.mean.map((v, j) => (a.n * v + b.n * b.mean[j]) / n),
+      n, members: a.members.concat(b.members), height: Math.sqrt(2 * best),
+      a: a.id, b: b.id,
+    };
+    nodes.push(parent);
+    merges.push(parent);
+    active.splice(ib, 1);
+    active.splice(ia, 1);
+    active.push(parent);
+  }
+  return { merges, nodes };
+}
+function cutWard(tree, n, k) {
+  const active = new Map();
+  for (let i = 0; i < n; i++) active.set(i, tree.nodes[i]);
+  for (const parent of tree.merges.slice(0, n - k)) {
+    active.delete(parent.a);
+    active.delete(parent.b);
+    active.set(parent.id, parent);
+  }
+  const labels = Array(n).fill(0);
+  [...active.values()].sort((a, b) => Math.min(...a.members) - Math.min(...b.members))
+    .forEach((node, group) => node.members.forEach(i => labels[i] = group));
+  return labels;
+}
+function silhouette(X, labels, k, distances) {
+  const n = X.length;
+  const count = Array(k).fill(0);
+  labels.forEach(j => count[j]++);
+  let score = 0;
+  for (let i = 0; i < n; i++) {
+    const sums = Array(k).fill(0);
+    for (let j = 0; j < n; j++) if (j !== i) sums[labels[j]] += distances[i * n + j];
+    const own = labels[i];
+    if (count[own] <= 1) continue;
+    const a = sums[own] / (count[own] - 1);
+    let b = Infinity;
+    for (let group = 0; group < k; group++) {
+      if (group !== own && count[group]) b = Math.min(b, sums[group] / count[group]);
+    }
+    score += (b - a) / Math.max(a, b);
+  }
+  return score / n;
+}
+function computeClusters() {
+  const scale = $('c-scale').value;
+  const key = scale + '|' + chosen.join(',');
+  if (cache.has(key)) return cache.get(key);
+  const raw = G.rows.map(r => chosen.map(f => +r[GI[f]]));
+  const n = raw.length;
+  const means = chosen.map((_, j) => raw.reduce((a, r) => a + r[j], 0) / n);
+  const sds = chosen.map((_, j) => Math.sqrt(raw.reduce((a, r) => a + (r[j] - means[j]) ** 2, 0) / n) || 1);
+  const X = scale === 'standard' ? raw.map(r => r.map((v, j) => (v - means[j]) / sds[j])) : raw;
+  const distances = new Float32Array(n * n);
+  for (let i = 0; i < n; i++) for (let j = 0; j < i; j++) {
+    let d = Math.sqrt(sqDist(X[i], X[j]));
+    distances[i * n + j] = d;
+    distances[j * n + i] = d;
+  }
+  const km = {}, ward = {};
+  for (let k = 2; k <= 7; k++) {
+    km[k] = kmeans(X, k);
+    km[k].silhouette = silhouette(X, km[k].labels, k, distances);
+  }
+  const tree = wardTree(X);
+  for (let k = 2; k <= 7; k++) {
+    ward[k] = { labels: cutWard(tree, n, k) };
+    ward[k].silhouette = silhouette(X, ward[k].labels, k, distances);
+  }
+  const result = { X, raw, means, sds, km, ward, tree };
+  cache.set(key, result);
+  return result;
+}
+function descriptions(C, labels, k) {
+  const result = [];
+  for (let group = 0; group < k; group++) {
+    const indices = labels.map((label, i) => label === group ? i : -1).filter(i => i >= 0);
+    const avg = chosen.map((_, j) => indices.reduce((s, i) => s + C.raw[i][j], 0) / indices.length);
+    const z = avg.map((v, j) => (v - C.means[j]) / C.sds[j]);
+    const order = z.map((v, i) => ({ v, i })).sort((a, b) => b.v - a.v);
+    const high = order.find(v => v.v > .25), low = [...order].reverse().find(v => v.v < -.25);
+    const name = [high ? 'High ' + chosen[high.i] : '', low ? 'Low ' + chosen[low.i] : ''].filter(Boolean).join(' · ') || 'Balanced game-stat profile';
+    result.push({ id: group, n: indices.length, name, means: avg, profile: z });
+  }
+  return result;
+}
+function renderDendrogram(C) {
+  const chosen45 = Array.from({ length: 45 }, (_, i) => Math.floor(i * (C.X.length - 1) / 44));
+  const tree = wardTree(chosen45.map(i => C.X[i]));
+  const coord = new Map();
+  for (let i = 0; i < 45; i++) coord.set(i, { x: 10 * i + 5, y: 0 });
+  const traces = tree.merges.map(node => {
+    const a = coord.get(node.a), b = coord.get(node.b), x = (a.x + b.x) / 2;
+    coord.set(node.id, { x, y: node.height });
+    return { type:'scatter', mode:'lines', x:[a.x,a.x,b.x,b.x], y:[a.y,node.height,node.height,b.y],
+      line:{color:'#45cfbd',width:1.5}, hoverinfo:'skip', showlegend:false };
+  });
+  plot('c-dendro', traces, { margin:{l:68,r:15,t:14,b:45},
+    xaxis:{title:{text:'45 sampled team-games'},showticklabels:false,showgrid:false,zeroline:false},
+    yaxis:{title:{text:'Ward linkage height'}}, showlegend:false });
+}
+function renderCluster() {
+  const alg = $('c-alg').value, scale = $('c-scale').value, k = +$('c-k').value;
+  $('c-k-show').textContent = String(k);
+  $('c-feature-note').textContent = `${chosen.length} features: ${chosen.join(', ')} · ${G.sample_rows} rows (8 from each team) · win/loss excluded`;
+  const R = computeClusters();
+  const chosenModel = alg === 'kmeans' ? R.km[k] : R.ward[k];
+  const labels = chosenModel.labels;
+  const groups = descriptions(R, labels, k);
+  $('c-metrics').innerHTML = metric('Clusters',String(k),'Descriptive groups') +
+    metric('Silhouette',fmt(chosenModel.silhouette,3),'Higher ≈ better separation') +
+    metric('Rows clustered',fmt(R.raw.length,0),'Reproducible balanced sample') +
+    metric('Scaling',scale==='standard'?'Z-scores':'Raw',chosen.length+' selected features');
+  const xFeature = chosen[0], yFeature = chosen[1];
+  const traces = groups.map(g => {
+    const xx=[], yy=[], text=[];
+    labels.forEach((id, i) => {
+      if(id !== g.id) return;
+      xx.push(R.X[i][0]); yy.push(R.X[i][1]);
+      const r = G.rows[i];
+      text.push(`<b>${r[GI.TEAM]}</b> · ${r[GI.DATE]}<br>${r[GI.MATCHUP]}<br>${xFeature}: ${R.raw[i][0]} · ${yFeature}: ${R.raw[i][1]}`);
+    });
+    return {type:'scatter',mode:'markers',name:'Cluster '+(g.id+1),x:xx,y:yy,text,
+      hovertemplate:'%{text}<extra>'+g.name+'</extra>',marker:{size:9,color:clusterColors[g.id],opacity:.72}};
+  });
+  const suffix=scale==='standard'?' (z-score)':' (raw)';
+  plot('c-scatter',traces,{xaxis:{title:{text:xFeature+suffix}},yaxis:{title:{text:yFeature+suffix}},
+    legend:{orientation:'h',y:1.13,x:0},margin:{l:70,r:25,t:24,b:70}});
+  const ks=[2,3,4,5,6,7];
+  const wcss=ks.map(j=>R.km[j].wcss);
+  plot('c-elbow',[{type:'scatter',mode:'lines+markers',x:ks,y:wcss,line:{color:C.blue,width:3},marker:{size:9}},{type:'scatter',mode:'markers',x:[k],y:[R.km[k].wcss],marker:{size:15,color:C.orange,line:{color:'#fff',width:2}}}],
+    {showlegend:false,xaxis:{title:{text:'K (K-means)'},dtick:1},yaxis:{title:{text:'Within-cluster SSE'},rangemode:'tozero'},margin:{l:73,r:18,t:14,b:50}});
+  const scores=ks.map(j=>alg==='kmeans'?R.km[j].silhouette:R.ward[j].silhouette);
+  plot('c-sil',[{type:'scatter',mode:'lines+markers',x:ks,y:scores,line:{color:C.teal,width:3},marker:{size:9}},{type:'scatter',mode:'markers',x:[k],y:[chosenModel.silhouette],marker:{size:15,color:C.orange,line:{color:'#fff',width:2}}}],
+    {showlegend:false,xaxis:{title:{text:'K ('+(alg==='kmeans'?'K-means':'Ward')+')'},dtick:1},yaxis:{title:{text:'Silhouette score'}},margin:{l:65,r:18,t:14,b:50}});
+  plot('c-heat',[{type:'heatmap',z:groups.map(g=>g.profile),x:chosen,y:groups.map(g=>'Cluster '+(g.id+1)),
+    zmin:-1.6,zmax:1.6,zmid:0,colorscale:[[0,'#4386b6'],[.5,'#203349'],[1,'#e87430']],
+    colorbar:{title:{text:'Z score'},thickness:12,len:.76,outlinewidth:0},
+    hovertemplate:'%{y} · %{x}<br>Difference from sample mean: %{z:.2f} SD<extra></extra>'}],
+    {margin:{l:90,r:25,t:15,b:65},xaxis:{showgrid:false},yaxis:{autorange:'reversed',showgrid:false}});
+  $('c-cluster-cards').innerHTML = groups.map(g=>`<div class="cluster-card"><div class="cluster-swatch" style="background:${clusterColors[g.id]}"></div><div><strong>Cluster ${g.id+1} · ${g.name}</strong><div class="detail">${g.n} team-game observations · ${fmt(100*g.n/G.sample_rows)}% of sample<br>${chosen.map((f,j)=>f+': '+fmt(g.means[j])).slice(0,4).join(' · ')}</div></div></div>`).join('');
+  $('c-dendro-panel').hidden = alg !== 'hierarchical';
+  if (alg === 'hierarchical') renderDendrogram(R);
+}
+featureControls();
+['c-alg','c-scale'].forEach(id=>$(id).addEventListener('change',renderCluster));
+$('c-k').addEventListener('input',renderCluster);
+
+// Hash links work on GitHub Pages and allow directly opening a tab.
+const start=location.hash.replace('#','');activate(['explore','logit','cluster'].includes(start)?start:'explore');
+</script>
+</body>
+</html>
