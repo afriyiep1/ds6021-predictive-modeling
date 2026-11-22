@@ -19,7 +19,7 @@
     .main{min-width:0;max-width:1620px;width:100%;padding:32px clamp(18px,3vw,53px) 60px;margin:auto}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:30px}.crumb{color:#9db0c4;font-size:12px;letter-spacing:.065em}.crumb strong{color:var(--white)}.pill{display:inline-flex;align-items:center;gap:7px;background:#102a35;color:#87e7c9;border:1px solid #25584b;font-size:11px;font-weight:700;border-radius:99px;padding:9px 13px}.dot{width:7px;height:7px;border-radius:100%;background:#5ddcb4;box-shadow:0 0 8px #5ddcb4}
     .hero{background:radial-gradient(ellipse at 93% 7%,#33405c 0%,transparent 42%),linear-gradient(135deg,#172e49 0%,#11243b 60%,#12223a);border:1px solid #30455d;box-shadow:0 16px 55px #0002;border-radius:23px;padding:31px 36px 32px;margin-bottom:23px;position:relative;overflow:hidden}.hero:after{content:"◌";position:absolute;right:43px;top:20px;font-size:180px;line-height:1;color:#e9842b0c;pointer-events:none}.eyebrow{font-size:11px;color:#ffa268;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}.hero h1{font-size:clamp(26px,3vw,40px);font-weight:780;letter-spacing:-.04em;line-height:1.15;margin:0 0 10px}.hero p{max-width:770px;color:#b8cade;margin:0;line-height:1.7;font-size:14px}
-    .metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:23px}.metric{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 19px}.metric .kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#9eb3c8}.metric .value{font-size:27px;font-weight:790;margin:8px 0 4px;letter-spacing:-.05em;font-variant-numeric:tabular-nums}.metric .micro{font-size:11px;color:#899eb5}
+    .metric-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:23px}#top-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.metric{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 19px}.metric .kicker{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:800;color:#9eb3c8}.metric .value{font-size:27px;font-weight:790;margin:8px 0 4px;letter-spacing:-.05em;font-variant-numeric:tabular-nums}.metric .micro{font-size:11px;color:#899eb5}
     .tab-panel{display:none}.tab-panel.active{display:block}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:17px 0 13px}.section-title h2{font-size:17px;letter-spacing:-.015em;margin:0}.section-title span{font-size:11px;color:var(--muted)}
     .controls{display:flex;flex-wrap:wrap;gap:14px;padding:18px 19px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;align-items:end}.control{min-width:130px;flex:1 1 130px}.control.wide{flex:2 1 190px}.control label{display:block;color:#afc4d8;font-size:11px;font-weight:650;margin:0 0 7px}.control select,.control input[type=range]{width:100%}.control select{appearance:none;color:#e7f2ff;background:#162a42;border:1px solid #35506b;border-radius:10px;padding:10px 32px 10px 12px;outline:none;min-height:41px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a8bed3' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}.control select:focus{border-color:var(--blue)}.control select:disabled{opacity:.38}.control input[type=range]{accent-color:var(--orange);padding:6px 0;cursor:pointer}.rangevalue{display:inline-block;color:#fff;font-weight:800;background:#283e55;border-radius:5px;padding:2px 7px;margin-left:5px;min-width:38px;text-align:center}
     .btn{background:#243952;border:1px solid #45617b;border-radius:10px;color:white;font-weight:700;padding:12px 15px;white-space:nowrap}.btn:hover{background:#33516f}.btn:focus-visible,.nav button:focus-visible{outline:3px solid var(--orange)}
@@ -31,7 +31,7 @@
     [hidden]{display:none!important}
     @media(max-width:1120px){.app{grid-template-columns:190px minmax(0,1fr)}.main{padding:24px 20px}.metric-row{grid-template-columns:repeat(2,1fr)}.model-metrics{grid-template-columns:repeat(3,1fr)}.sidebar{padding:23px 11px}}
     @media(max-width:780px){.app{display:block}.sidebar{height:auto;position:relative;padding:12px 15px;display:block}.sidebar .logo{margin-bottom:12px}.side-label,.side-footer{display:none}.nav{display:flex;gap:6px}.nav button{font-size:11px;padding:10px 9px;justify-content:center}.nav .num{display:none}.main{padding:16px 12px 30px}.hero{padding:22px}.charts{grid-template-columns:1fr}.two-wide{grid-column:auto}.plot{height:330px}.cluster-cards{grid-template-columns:1fr 1fr}.topbar{margin-bottom:15px}.pill{font-size:9px}}
-    @media(max-width:480px){.metric-row{gap:8px}.metric{padding:12px}.metric .value{font-size:22px}.model-metrics{grid-template-columns:repeat(2,1fr)}.cluster-cards{grid-template-columns:1fr}.control{flex:1 1 45%}.hero h1{font-size:26px}.panel{padding:12px 8px 5px}.plot{height:315px}}
+    @media(max-width:480px){#top-metrics{grid-template-columns:1fr}.metric-row{gap:8px}.metric{padding:12px}.metric .value{font-size:22px}.model-metrics{grid-template-columns:repeat(2,1fr)}.cluster-cards{grid-template-columns:1fr}.control{flex:1 1 45%}.hero h1{font-size:26px}.panel{padding:12px 8px 5px}.plot{height:315px}}
   </style>
 </head>
 <body>
@@ -46,17 +46,16 @@
     <div class="side-footer"><span class="tinybadge">2017–18 NBA SEASON</span><p>University of Virginia<br>MS in Data Science<br>Introduction to Predictive Modeling</p><p>Built with Python + Plotly<br>Hosted on GitHub Pages</p></div>
   </aside>
   <main class="main">
-    <div class="topbar"><div class="crumb"><strong>DS 6021</strong> / Applied Predictive Modeling / NBA</div><div class="pill"><span class="dot"></span> INTERACTIVE MODEL LAB</div></div>
+    <div class="topbar"><div class="crumb"><strong>DS 6021</strong> / Introduction to Predictive Modeling / NBA</div><div class="pill"><span class="dot"></span> INTERACTIVE MODEL LAB</div></div>
     <section class="hero"><div class="eyebrow">Basketball analytics · 2017–18</div><h1 id="hero-title">Find the story in every game.</h1><p id="hero-desc">Explore team performance, discover the statistical signals associated with winning, and uncover distinct playing styles across the NBA.</p></section>
-    <div class="metric-row" id="top-metrics">
-      <div class="metric"><div class="kicker">Team-game rows</div><div class="value">2,460</div><div class="micro">Two observations per game</div></div>
-      <div class="metric"><div class="kicker">NBA games</div><div class="value">1,230</div><div class="micro">Completed regular-season games</div></div>
-      <div class="metric"><div class="kicker">Teams</div><div class="value">30</div><div class="micro">82 games per team</div></div>
-      <div class="metric"><div class="kicker">Season</div><div class="value">2017–18</div><div class="micro">Oct 17 – Apr 11</div></div>
-    </div>
 
     <section id="explore" class="tab-panel active" aria-label="Explore Data">
       <div class="section-title"><h2>Explore the data</h2><span>Change a filter to update the visuals</span></div>
+      <div class="metric-row" id="top-metrics">
+        <div class="metric"><div class="kicker">Games</div><div class="value">1,230</div><div class="micro">Completed regular-season games</div></div>
+        <div class="metric"><div class="kicker">Seasons</div><div class="value">1</div><div class="micro">2017–18 regular season</div></div>
+        <div class="metric"><div class="kicker">Teams</div><div class="value">30</div><div class="micro">NBA teams represented</div></div>
+      </div>
       <div class="controls">
         <div class="control"><label for="e-team">Team</label><select id="e-team"></select></div>
         <div class="control"><label for="e-result">Outcome</label><select id="e-result"><option value="all">Wins + losses</option><option value="1">Wins only</option><option value="0">Losses only</option></select></div>
@@ -66,7 +65,6 @@
         <div class="control"><label for="e-stat">Compare statistic</label><select id="e-stat"></select></div>
         <button class="btn" id="e-download" type="button">↓ Export filtered CSV</button>
       </div>
-      <div class="metric-row" id="e-metrics"></div>
       <div class="charts">
         <div class="panel"><div class="panel-head"><div><h3>Points vs field-goal percentage</h3><div class="sub">Hover over each team-game observation</div></div></div><div class="plot" id="e-scatter"></div></div>
         <div class="panel"><div class="panel-head"><div><h3>How winners and losers differ</h3><div class="sub">Box plots show the distribution of a selected statistic</div></div></div><div class="plot" id="e-box"></div></div>
@@ -159,8 +157,6 @@ function filterCorr(rows) {
 function exploreRows(applyResult=true){let t=$('e-team').value,r=$('e-result').value,h=$('e-home').value;return E.rows.filter(row=>(t==='ALL TEAMS'||row[EI.TEAM]===t)&&(!applyResult||r==='all'||String(row[EI.win])===r)&&(h==='all'||row[EI.home_away]===h))}
 function renderExplore(){
   const rows=exploreRows(),stat=$('e-stat').value,x=$('e-x').value,y=$('e-y').value;
-  const wins=rows.filter(r=>r[EI.win]).length;const avg=rows.length?rows.reduce((a,r)=>a+r[EI.PTS],0)/rows.length:0;
-  $('e-metrics').innerHTML=metric('Team-games',fmt(rows.length,0),'Under current filters')+metric('Win rate',rows.length?fmt(100*wins/rows.length)+'%':'—','Win share of selected records')+metric('Average points',rows.length?fmt(avg):'—','PTS per selected team-game')+metric('Unique teams',fmt(new Set(rows.map(r=>r[EI.TEAM])).size,0),'In filtered sample');
   const scatter=[{win:0,color:C.red,label:'Losses'},{win:1,color:C.teal,label:'Wins'}].map(g=>{
     let rr=rows.filter(r=>r[EI.win]===g.win);return {type:'scattergl',mode:'markers',name:g.label,x:rr.map(r=>r[EI[x]]),y:rr.map(r=>r[EI[y]]),customdata:rr.map(r=>[r[EI.TEAM],r[EI.DATE],r[EI.MATCHUP]]),marker:{size:8,color:g.color,opacity:.6,line:{width:0}},hovertemplate:'<b>%{customdata[0]}</b> · %{customdata[1]}<br>%{customdata[2]}<br>'+x+': %{x}<br>'+y+': %{y}<extra>'+g.label+'</extra>'}
   });
