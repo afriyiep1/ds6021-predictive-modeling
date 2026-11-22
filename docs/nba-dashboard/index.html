@@ -70,8 +70,8 @@
       <div class="charts">
         <div class="panel"><div class="panel-head"><div><h3>Points vs field-goal percentage</h3><div class="sub">Hover over each team-game observation</div></div></div><div class="plot" id="e-scatter"></div></div>
         <div class="panel"><div class="panel-head"><div><h3>How winners and losers differ</h3><div class="sub">Box plots show the distribution of a selected statistic</div></div></div><div class="plot" id="e-box"></div></div>
-        <div class="panel"><div class="panel-head"><div><h3>Who's winning?</h3><div class="sub">Top 12 teams by season win percentage; venue filter applies</div></div></div><div class="plot" id="e-teams"></div></div>
-        <div class="panel"><div class="panel-head"><div><h3>Which variables move together?</h3><div class="sub">Pearson correlations from the complete season</div></div></div><div class="plot" id="e-corr"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Who's winning?</h3><div class="sub">Top 12 teams by win percentage in the filtered sample</div></div></div><div class="plot" id="e-teams"></div></div>
+        <div class="panel"><div class="panel-head"><div><h3>Which variables move together?</h3><div class="sub">Pearson correlations computed from selected team-games</div></div></div><div class="plot" id="e-corr"></div></div>
       </div>
       <div class="insight"><b>Explore → question:</b> Which metrics separate wins from losses, and how might the answer change when you examine one team instead of the entire league? Associations are not necessarily causal relationships.</div>
     </section>
@@ -146,6 +146,16 @@ function activate(name){
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>activate(b.dataset.tab)));
 
 // Tab 1: EDA. Row indexing keeps the HTML data payload smaller than an object per record.
+function filterCorr(rows) {
+  const values = E.stats.map(stat => rows.map(r => +r[EI[stat]]));
+  return values.map(a => values.map(b => {
+    if (a.length < 3) return null;
+    const am=a.reduce((s,v)=>s+v,0)/a.length, bm=b.reduce((s,v)=>s+v,0)/b.length;
+    let numerator=0, aa=0, bb=0;
+    for(let i=0;i<a.length;i++) {let da=a[i]-am, db=b[i]-bm; numerator+=da*db; aa+=da*da; bb+=db*db;}
+    return aa>0 && bb>0 ? numerator/Math.sqrt(aa*bb) : null;
+  }));
+}
 function exploreRows(applyResult=true){let t=$('e-team').value,r=$('e-result').value,h=$('e-home').value;return E.rows.filter(row=>(t==='ALL TEAMS'||row[EI.TEAM]===t)&&(!applyResult||r==='all'||String(row[EI.win])===r)&&(h==='all'||row[EI.home_away]===h))}
 function renderExplore(){
   const rows=exploreRows(),stat=$('e-stat').value,x=$('e-x').value,y=$('e-y').value;
@@ -156,10 +166,10 @@ function renderExplore(){
   });
   plot('e-scatter',scatter,{xaxis:{title:{text:x}},yaxis:{title:{text:y}},margin:{l:63,r:20,t:20,b:63},legend:{orientation:'h',y:1.1,x:0}});
   plot('e-box',[{type:'box',name:'Losses',y:rows.filter(r=>!r[EI.win]).map(r=>r[EI[stat]]),marker:{color:C.red},boxmean:true,fillcolor:'rgba(237,139,147,.18)',line:{color:C.red}},{type:'box',name:'Wins',y:rows.filter(r=>r[EI.win]).map(r=>r[EI[stat]]),marker:{color:C.teal},boxmean:true,fillcolor:'rgba(69,207,189,.18)',line:{color:C.teal}}],{yaxis:{title:{text:stat}},showlegend:false,margin:{l:65,r:20,t:18,b:50}});
-  const rrank=exploreRows(false), by={};rrank.forEach(r=>{let team=r[EI.TEAM];(by[team]??=[]).push(r[EI.win])});
+  const rrank=rows, by={};rrank.forEach(r=>{let team=r[EI.TEAM];(by[team]??=[]).push(r[EI.win])});
   let rates=Object.entries(by).map(([t,v])=>({t,p:v.reduce((a,b)=>a+b,0)/v.length,n:v.length})).sort((a,b)=>b.p-a.p).slice(0,12).reverse();
   plot('e-teams',[{type:'bar',orientation:'h',x:rates.map(v=>v.p*100),y:rates.map(v=>v.t),text:rates.map(v=>fmt(v.p*100)+'%'),textposition:'outside',cliponaxis:false,marker:{color:rates.map(v=>v.p>=.5?C.teal:C.orange),line:{width:0}},hovertemplate:'%{y}<br>Win rate %{x:.1f}%<extra></extra>'}],{xaxis:{title:{text:'Win rate (%)'},range:[0,105]},yaxis:{automargin:true},margin:{l:58,r:53,t:10,b:44},showlegend:false});
-  const corr=E.correlation;plot('e-corr',[{type:'heatmap',x:E.stats,y:E.stats,z:corr,zmin:-1,zmax:1,zmid:0,colorscale:[[0,'#417aa8'],[.5,'#1a293a'],[1,'#e87430']],colorbar:{thickness:11,len:.78,outlinewidth:0},hovertemplate:'%{y} × %{x}<br>Correlation: %{z:.2f}<extra></extra>'}],{margin:{l:55,r:20,t:14,b:72},xaxis:{tickangle:-55,side:'bottom',showgrid:false},yaxis:{autorange:'reversed',showgrid:false}});
+  const corr=filterCorr(rows);plot('e-corr',[{type:'heatmap',x:E.stats,y:E.stats,z:corr,zmin:-1,zmax:1,zmid:0,colorscale:[[0,'#417aa8'],[.5,'#1a293a'],[1,'#e87430']],colorbar:{thickness:11,len:.78,outlinewidth:0},hovertemplate:'%{y} × %{x}<br>Correlation: %{z:.2f}<extra></extra>'}],{margin:{l:55,r:20,t:14,b:72},xaxis:{tickangle:-55,side:'bottom',showgrid:false},yaxis:{autorange:'reversed',showgrid:false}});
 }
 ['e-team','e-result','e-home','e-x','e-y','e-stat'].forEach(id=>$(id).addEventListener('change',renderExplore));
 $('e-download').addEventListener('click',()=>{
